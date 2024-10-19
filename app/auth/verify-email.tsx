@@ -9,11 +9,10 @@ import { router } from "expo-router";
 const VerifyEmail: React.FC = () => {
   const [code, setCode] = useState<string>(""); // State for verification code input
   const { state } = useAuth(); // Get email from context
-  const navigation = useNavigation();
   const [loading, setLoading] = useState(false); // For showing loading state
 
   // Function to verify email with the entered code
-  console.log(state.user.email);
+  console.log(state.user.email, state.token);
   const verifyEmail = async () => {
     if (!code) {
       Alert.alert("Error", "Please enter the verification code.");

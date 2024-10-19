@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { RootSiblingParent } from "react-native-root-siblings";
 import * as SplashScreen from "expo-splash-screen";
 import {
   useFonts,
@@ -28,27 +29,29 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Stack>
-        <Stack.Screen
-          name="index"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="auth"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            contentStyle: { backgroundColor: "white" },
-          }}
-        />
-      </Stack>
+      <RootSiblingParent>
+        <Stack>
+          <Stack.Screen
+            name="index"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="auth"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false,
+              contentStyle: { backgroundColor: "white" },
+            }}
+          />
+        </Stack>
+      </RootSiblingParent>
     </AuthProvider>
   );
 }
