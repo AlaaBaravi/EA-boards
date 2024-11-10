@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Alert,
+  Pressable,
+} from "react-native";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { z } from "zod";
@@ -7,18 +14,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import CustomButton from "../ui/CustomButton";
 import { Colors } from "@/constants/Colors";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import axios, { AxiosError } from "axios";
+import { mainstyles } from "@/constants/Styles";
+import Toast from "react-native-root-toast";
+import useAuthActions from "@/store/authActions";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters long")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[\W_]/, "Password must contain at least one special character")
     .refine(
       (password) => !/\s/.test(password),
       "Password must not contain spaces"
@@ -29,6 +35,8 @@ type LoginFormInput = z.infer<typeof loginSchema>;
 
 const LoginForm = () => {
   const [isPasswordVisable, setIsPasswordVisable] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const { login } = useAuthActions();
 
   function handlePasswordVisable() {
     setIsPasswordVisable((visable) => !visable);
@@ -36,36 +44,43 @@ const LoginForm = () => {
 
   const {
     handleSubmit,
+    reset,
     formState: { errors },
     control,
   } = useForm<LoginFormInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "abdoezzat@gmail.com", password: "Ammmmmm123!" },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit: SubmitHandler<LoginFormInput> = async (data) => {
-    console.log("Form Data:", data);
     try {
-      // const response = await axios.post(
-      //   "https://new.aeboards.net/api/auth/login",
-      //   { email: data.email, password: data.password },
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Accept: "application/json",
-      //     },
-      //   }
-      // );
+      const response = await axios.post(
+        "https://new.aeboards.net/api/auth/login",
+        { email: data.email, password: data.password },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
 
-      // Alert.alert("Success", "You logged in successfully.");
+      Toast.show("You logged in successfully.", {
+        duration: Toast.durations.LONG,
+        backgroundColor: "#198754",
+        opacity: 1,
+      });
 
-      router.push("/(tabs)");
+      await login(response.data.data.token, response.data.data);
+
+      console.log(response.data.data.token);
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.log(error.message);
+        setError(error.response?.data.message);
+      } else {
+        console.error(error);
+        Alert.alert("Error", "An unknown error occurred.");
       }
-      console.error(error);
-      Alert.alert("Error", "login failed. Please try again.");
     }
   };
 
@@ -93,13 +108,30 @@ const LoginForm = () => {
         control={control}
         name="password"
         render={({ field: { onChange, onBlur, value } }) => (
-          <View style={[styles.input, styles.passwordInput]}>
+          <View
+            style={[
+              styles.input,
+              styles.passwordInput,
+              {
+                borderColor:
+                  error === "Email and password not valid"
+                    ? Colors.light.danger
+                    : Colors.light.primary,
+              },
+            ]}
+          >
             <TextInput
               placeholder="Password"
               secureTextEntry={!isPasswordVisable}
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              style={{
+                color:
+                  error === "Email and password not valid"
+                    ? Colors.light.danger
+                    : "black",
+              }}
             />
             <Ionicons
               name={isPasswordVisable ? "eye-off-outline" : "eye-outline"}
@@ -115,6 +147,29 @@ const LoginForm = () => {
         typeof errors.password.message === "string" && (
           <Text style={styles.error}>{errors.password.message}</Text>
         )}
+
+      <Link href="/auth/forgotPassword" asChild>
+        <Pressable
+          onPress={() => {
+            reset();
+            setError("");
+          }}
+        >
+          <Text
+            style={[
+              styles.forgetPassword,
+              {
+                color:
+                  error === "Email and password not valid"
+                    ? Colors.light.danger
+                    : "black",
+              },
+            ]}
+          >
+            Forget your password?
+          </Text>
+        </Pressable>
+      </Link>
 
       <CustomButton title="Log in" onPress={handleSubmit(onSubmit)} />
     </View>
@@ -133,7 +188,7 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: Colors.light.secondary,
+    borderColor: Colors.light.primary,
     borderBottomWidth: 1,
     marginBottom: 10,
     padding: 8,
@@ -144,7 +199,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   error: {
-    color: "red",
+    color: Colors.light.danger,
     marginBottom: 10,
+  },
+  forgetPassword: {
+    ...mainstyles.caption,
+    marginVertical: 12,
+    textAlign: "right",
   },
 });

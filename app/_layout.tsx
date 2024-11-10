@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Slot } from "expo-router";
 import { RootSiblingParent } from "react-native-root-siblings";
 import * as SplashScreen from "expo-splash-screen";
 import {
@@ -8,7 +8,7 @@ import {
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
 import { useEffect } from "react";
-import { AuthProvider } from "@/store/authContext";
+import { AuthProvider, useAuth } from "@/store/authContext";
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -30,27 +30,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <RootSiblingParent>
-        <Stack>
-          <Stack.Screen
-            name="index"
-            options={{
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="auth"
-            options={{
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="(tabs)"
-            options={{
-              headerShown: false,
-              contentStyle: { backgroundColor: "white" },
-            }}
-          />
-        </Stack>
+        <Slot />
       </RootSiblingParent>
     </AuthProvider>
   );

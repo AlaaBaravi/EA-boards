@@ -13,7 +13,7 @@ const LoginSignup = () => {
     <LinearBackground>
       <Logo />
       <View>
-        <WelcomeText />
+        <WelcomeText text="Welcome" />
         <Text style={styles.text}>Glad to see you</Text>
       </View>
       <WelcomeImage />

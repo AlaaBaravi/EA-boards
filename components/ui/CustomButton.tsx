@@ -10,21 +10,25 @@ import { Colors } from "@/constants/Colors";
 interface PrimaryButtonProps {
   title: string;
   variant?: "primary" | "secondary";
+  disabled?: boolean;
   onPress: (event: GestureResponderEvent) => void;
 }
 
 const CustomButton: FC<PrimaryButtonProps> = ({
   title,
   onPress,
+  disabled = false,
   variant = "primary",
 }) => {
   return (
     <Pressable
+      android_ripple={{ color: "#28fd6c" }}
       style={[
         styles.button,
         variant === "secondary" ? styles.secondary : styles.primary,
       ]}
       onPress={onPress}
+      disabled={disabled}
     >
       <Text
         style={
@@ -46,10 +50,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 24,
   },
   primary: {
-    backgroundColor: Colors.light.secondary,
+    backgroundColor: Colors.light.primary,
   },
   secondary: {
     backgroundColor: "transparent",

@@ -4,19 +4,22 @@ import LinearBackground from "@/components/ui/LinearBackground";
 import SignupForm from "@/components/login-signup/SignupForm";
 import { Link } from "expo-router";
 import { mainstyles } from "@/constants/Styles";
+import { FormProvider } from "@/store/signupContext";
 
 const Signup = () => {
   return (
-    <LinearBackground>
-      <Logo />
-      <SignupForm />
-      <View style={styles.registerContainer}>
-        <Text style={mainstyles.caption}>Already have an account ?</Text>
-        <Link href={"/auth/login"}>
-          <Text style={styles.registerText}>Login now</Text>
-        </Link>
-      </View>
-    </LinearBackground>
+    <FormProvider>
+      <LinearBackground>
+        <Logo />
+        <SignupForm />
+        <View style={styles.registerContainer}>
+          <Text style={mainstyles.caption}>Already have an account ?</Text>
+          <Link href={"/auth/login"}>
+            <Text style={styles.registerText}>Login now</Text>
+          </Link>
+        </View>
+      </LinearBackground>
+    </FormProvider>
   );
 };
 

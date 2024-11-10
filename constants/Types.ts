@@ -1,3 +1,36 @@
+import { FontAwesome } from "@expo/vector-icons";
+
+export interface TabOption {
+  name: string;
+  label: string;
+  icon: keyof typeof FontAwesome.glyphMap;
+}
+
+export interface User {
+  email: string;
+  name: string;
+  type: "individual" | "company";
+}
+
+export interface UserProfile {
+  id: number;
+  name: string;
+  username: string | null;
+  phone: string;
+  email: string;
+  token: string;
+  fcm_token: null;
+  industry_type_id: number | null;
+  type: "company" | "individual";
+  description: string | null;
+  business_size: string | null;
+  location: string | null;
+  verify_admin: string;
+  image: string;
+  favorites: [];
+  files: [];
+}
+
 export interface LoginData {
   email: string;
   password: string;
@@ -7,7 +40,7 @@ export interface LoginData {
 export interface AuthState {
   token: string | null;
   isLoggedIn: boolean;
-  user: any;
+  user: User | null;
 }
 
 // Action types
@@ -19,7 +52,73 @@ export type AuthAction =
 export type Industry = {
   id: number;
   name_en: string;
-  name_ar: string; // Include if you plan to use Arabic names as well
+  name_ar: string;
   created_at: null | string;
   updated_at: null | string;
+};
+
+export type BillboardType = {
+  id: number;
+  text_en: string;
+  text_ar: string;
+  created_at: null;
+  updated_at: null;
+};
+
+export type Region = {
+  id: number;
+  name_en: string;
+  name_ar: string;
+  image: string;
+  created_at: null;
+  updated_at: null;
+};
+
+export type Company = {
+  id: number;
+  image: string;
+  name: string;
+  phone: string;
+  email: string;
+  max_booking_days: number;
+  min_booking_days: number;
+  numbers_billboards: number;
+};
+
+export type File = {
+  id: number;
+  path: string;
+  type: string;
+};
+
+export type Billboard = {
+  availability: string;
+  billboard_type_id: BillboardType;
+  company: Company;
+  description: any;
+  end_date_crowded: null;
+  files: Array<File>;
+  id: number;
+  kind: string;
+  location: string;
+  name: null;
+  price_on_crowded: null;
+  price_on_regular: null;
+  region: Region;
+  reviews: null;
+  start_date_crowded: null;
+  status: string;
+  title: string;
+  video_length: null;
+  video_repetition: null;
+};
+
+export type info = {
+  created_at: null;
+  id: number;
+  text_ar: string;
+  text_en: string;
+  title_ar: string;
+  title_en: string;
+  updated_at: null;
 };

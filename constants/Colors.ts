@@ -9,13 +9,14 @@ const tintColorDark = "#fff";
 export const Colors = {
   light: {
     text: "#11181C",
-    secondary: "#1A9040",
+    primary: "#1A9040",
     description: "#2C2626A3",
     background: "#fff",
     tint: tintColorLight,
     icon: "#687076",
     tabIconDefault: "#687076",
     tabIconSelected: tintColorLight,
+    danger: "#BA000A",
   },
   dark: {
     text: "#ECEDEE",
@@ -24,5 +25,6 @@ export const Colors = {
     icon: "#9BA1A6",
     tabIconDefault: "#9BA1A6",
     tabIconSelected: tintColorDark,
+    danger: "#BA000A",
   },
 };

@@ -11,7 +11,7 @@ const Login = () => {
     <LinearBackground>
       <Logo />
       <View>
-        <WelcomeText />
+        <WelcomeText text="Welcome" />
         <Text style={styles.text}>Glad to see you</Text>
       </View>
       <LoginForm />
@@ -29,7 +29,7 @@ export default Login;
 
 const styles = StyleSheet.create({
   text: {
-    ...mainstyles.title2,
+    ...mainstyles.caption,
     textAlign: "center",
     textTransform: "capitalize",
   },

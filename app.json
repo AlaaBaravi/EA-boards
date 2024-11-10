@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "AE-board",
+    "name": "AE Board",
     "slug": "AE-board",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,20 +8,22 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/background.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.abdelrahmanezzat22.AEboard"
     },
     "android": {
       "softwareKeyboardLayoutMode": "pan",
       "permissions": ["INTERNET"],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.abdelrahmanezzat22.AEboard"
     },
     "web": {
       "bundler": "metro",
@@ -31,6 +33,12 @@
     "plugins": ["expo-router", "expo-font"],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "034d581d-da33-4507-827e-246af90cb073",
+        "apiBaseUrl": "https://new.aeboards.net"
+      }
     }
   }
 }

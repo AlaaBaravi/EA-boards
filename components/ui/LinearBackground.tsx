@@ -10,14 +10,14 @@ interface LinearBackgroundType {
 
 const LinearBackground: FC<LinearBackgroundType> = ({ children }) => {
   return (
-    <ImageBackground
-      style={mainstyles.container}
-      source={require("@/assets/images/background.png")}
-    >
-      <LinearGradient colors={["#FFFFFF", "#90C9A2"]} style={styles.gradient}>
-        <View style={styles.container}>{children}</View>
-      </LinearGradient>
-    </ImageBackground>
+    // <ImageBackground
+    //   style={mainstyles.container}
+    //   source={require("@/assets/images/background.jpg")}
+    // >
+    <LinearGradient colors={["#FFFFFF", "#90C9A2"]} style={styles.gradient}>
+      <View style={styles.container}>{children}</View>
+    </LinearGradient>
+    // </ImageBackground>
   );
 };
 
@@ -31,9 +31,6 @@ const styles = StyleSheet.create({
   container: {
     ...mainstyles.container,
     alignItems: "center",
-    paddingTop: 64,
-    gap: 24,
-    paddingHorizontal: 12,
-    flex: 1,
+    justifyContent: "center",
   },
 });

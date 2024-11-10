@@ -1,21 +1,31 @@
 import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { Poppins_500Medium } from "@expo-google-fonts/poppins";
+import { useAuth } from "@/store/authContext";
+import { mainstyles } from "@/constants/Styles";
 
 const ImageOverlay = () => {
+  const { state } = useAuth();
+
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require("@/assets/images/billboard.jpeg")} // Replace with your image URL
+        source={require("@/assets/images/billboard.jpeg")}
         style={styles.backgroundImage}
-        resizeMode="cover" // Use cover or contain as needed
+        resizeMode="cover"
       >
         <LinearGradient
-          colors={["#2C262633", "#2C2626"]} // Customize colors and transparency
+          colors={["#2C262633", "#2C2626"]}
           style={styles.gradient}
         >
-          <Text style={styles.text}>
+          {state.user.type === "individual" && (
+            <Text
+              style={[mainstyles.title1, { color: "white", marginBottom: 8 }]}
+            >
+              Your Ad, Everywhere!
+            </Text>
+          )}
+          <Text style={[mainstyles.title2, styles.text]}>
             Your business is a few clicks away from becoming the next trend..
           </Text>
         </LinearGradient>
@@ -47,10 +57,9 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "white",
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
     marginHorizontal: 16,
-    fontWeight: "500",
     lineHeight: 24,
   },
 });

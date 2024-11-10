@@ -1,163 +1,171 @@
-import React from "react";
-import { View, Text, TextInput, Alert, StyleSheet } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import { View, Text, Alert, StyleSheet, ScrollView } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "@/store/authContext";
 import { Colors } from "@/constants/Colors";
 import CustomButton from "../ui/CustomButton";
-
-const signupSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email format"),
-  phone: z.string().min(10, "Phone number is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  accountType: z.enum(["company", "individual"]),
-  businessSize: z.string().optional(),
-  location: z.string().optional(),
-  industryTypeId: z.union([z.string(), z.number()]).optional(),
-  maxBookingDays: z.number().optional(),
-  minBookingDays: z.number().optional(),
-  numbersBillboards: z.number().optional(),
-});
-
-type SignupFormData = z.infer<typeof signupSchema>;
+import { mainstyles } from "@/constants/Styles";
+import { FormValues, signupFormSchema } from "@/constants/Schemas";
+import { FormContext, FormProvider } from "@/store/signupContext";
+import CompanyFormStep from "./CompanyFormStep";
+import IndividualFormStep from "./IndividualFormStep";
+import CompanyFormStepTwo from "./CompanyFormStepTwo";
+import { uriToBlob } from "@/util/fn";
+import Toast from "react-native-root-toast";
 
 export default function Signup() {
-  const { state, dispatch } = useAuth();
+  const { dispatch } = useAuth();
+  const [step, setStep] = useState(0);
+  const { accountType, setAccountType, formData, setFormData } =
+    useContext(FormContext);
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      accountType: "company",
-      businessSize: "50",
-      location: "Alexandria",
-      industryTypeId: 1,
-      maxBookingDays: 8.5504628,
-      minBookingDays: 4.18389,
-      numbersBillboards: 9.86,
-    },
-  });
+  const handleNextStep = (data: Partial<typeof formData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+    if (step === 1) {
+      setStep((prevStep) => prevStep + 1);
+    }
 
-  const router = useRouter();
+    if (step === 2) {
+      onSubmit(formData);
+    }
+  };
 
-  const onSubmit = async (data: SignupFormData) => {
-    console.log(data);
+  const handleSelectType = (type: "company" | "individual") => {
+    setAccountType(type);
+    setFormData((prev) => ({ ...prev, type }));
+    setStep(1);
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    console.log(data.image);
     try {
       const formData = new FormData();
+      formData.append("type", data.type);
       formData.append("name", data.name);
       formData.append("email", data.email);
       formData.append("phone", data.phone);
       formData.append("password", data.password);
-      formData.append("max_booking_days ", "8.5504628");
-      formData.append("min_booking_ays", "4.18389");
-      formData.append("numbers_billboards", "9.86");
-      formData.append("type", "company");
+      if (data.username !== undefined) {
+        formData.append("user_name", data.username);
+      }
+      if (data.industry_type_id !== undefined) {
+        formData.append("industry_type_id", data.industry_type_id.toString());
+      }
+      if (data.location !== undefined) {
+        formData.append("location", data.location);
+      }
+      if (data.business_size !== undefined) {
+        formData.append("business_size", data.business_size);
+      }
+      if (data.image) {
+        const response = await fetch(data.image);
+        const blob = await response.blob();
+        formData.append("image", {
+          uri: data.image,
+          name: `photo.${blob.type.split("/")[1]}`, // e.g., "photo.jpeg"
+          type: blob.type, // e.g., "image/jpeg"
+        } as any);
+      }
+      if (data.files) {
+        data.files.forEach((file, index) => {
+          formData.append(`files[${index}]`, {
+            uri: file.uri,
+            name: file.name,
+            type: file.type,
+          } as any);
+        });
+      }
 
-      const response = await axios.post(
-        "https://new.aeboards.net/api/auth/register",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      dispatch({
-        type: "LOGIN",
-        payload: {
-          token: response.data.data.token,
-          user: { email: response.data.data.email },
-        },
-      });
+      console.log(formData);
+      // const response = await axios.post(
+      //   "https://new.aeboards.net/api/auth/register",
+      //   formData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //       Accept: "application/json",
+      //     },
+      //   }
+      // );
+      // dispatch({
+      //   type: "LOGIN",
+      //   payload: {
+      //     token: response.data.data.token,
+      //     user: {
+      //       email: response.data.data.email,
+      //       accountType: response.data.data.type,
+      //     },
+      //   },
+      // });
       Alert.alert("Success", "Please verify your email.");
-
       router.push({
         pathname: "/auth/verify-email",
       });
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.log(error.message);
+        if (error.response) {
+          const apiErrorMessage = error.response.data?.message;
+          console.log(apiErrorMessage);
+          if (apiErrorMessage === "User already exist") {
+            Toast.show("This user already exists. Please log in..", {
+              duration: Toast.durations.LONG,
+              backgroundColor: Colors.light.danger,
+              opacity: 1,
+            });
+          } else {
+            Toast.show(
+              apiErrorMessage || "Registration failed. Please try again.",
+              {
+                duration: Toast.durations.LONG,
+                backgroundColor: Colors.light.danger,
+                opacity: 1,
+              }
+            );
+          }
+        }
+      } else {
+        console.error(error);
+        Toast.show("An unexpected error occurred. Please try again.", {
+          duration: Toast.durations.LONG,
+          backgroundColor: Colors.light.danger,
+          opacity: 1,
+        });
       }
-      console.error(error);
-      Alert.alert("Error", "Registration failed. Please try again.");
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Name Input */}
-      <Controller
-        control={control}
-        name="name"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="Name"
-            onChangeText={onChange}
-            value={value}
-            style={styles.input}
+      {step === 0 ? (
+        // Account Type Selection Screen (Step 0)
+        <View style={styles.buttonContainer}>
+          <Text style={[mainstyles.title2, { textAlign: "center" }]}>
+            Select Account Type
+          </Text>
+          <CustomButton
+            title="Company"
+            onPress={() => handleSelectType("company")}
           />
-        )}
-      />
-      {errors.name && <Text>{errors.name.message}</Text>}
-
-      {/* Email Input */}
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="Email"
-            onChangeText={onChange}
-            value={value}
-            style={styles.input}
+          <CustomButton
+            title="Individual"
+            onPress={() => handleSelectType("individual")}
           />
-        )}
-      />
-      {errors.email && <Text>{errors.email.message}</Text>}
-
-      {/* Phone Input */}
-      <Controller
-        control={control}
-        name="phone"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="Phone"
-            onChangeText={onChange}
-            value={value}
-            style={styles.input}
-          />
-        )}
-      />
-      {errors.phone && <Text>{errors.phone.message}</Text>}
-
-      {/* Password Input */}
-      <Controller
-        control={control}
-        name="password"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="Password"
-            secureTextEntry
-            onChangeText={onChange}
-            value={value}
-            style={styles.input}
-          />
-        )}
-      />
-      {errors.password && <Text>{errors.password.message}</Text>}
-
-      {/* Submit Button */}
-      <CustomButton title="Register" onPress={handleSubmit(onSubmit)} />
+        </View>
+      ) : accountType === "company" ? (
+        // Render Company Form Steps
+        step === 1 ? (
+          <CompanyFormStep onNextStep={handleNextStep} />
+        ) : (
+          <CompanyFormStepTwo onNextStep={handleNextStep} />
+        )
+      ) : (
+        // Render Individual Form Steps
+        <IndividualFormStep />
+      )}
     </View>
   );
 }
@@ -166,12 +174,8 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
   },
-  input: {
-    height: 40,
-    borderColor: Colors.light.secondary,
-    borderBottomWidth: 1,
-    marginBottom: 10,
-    padding: 8,
-    borderRadius: 5,
+
+  buttonContainer: {
+    gap: 16,
   },
 });

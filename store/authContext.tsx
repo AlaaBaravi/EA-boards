@@ -1,5 +1,14 @@
 import { AuthAction, AuthState } from "@/constants/Types";
-import { createContext, ReactNode, useContext, useReducer } from "react";
+import { fetchUserData } from "@/util/https";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
@@ -33,21 +42,50 @@ const initialState: AuthState = {
   user: null,
 };
 
-// Context types
 interface AuthContextProps {
   state: AuthState;
   dispatch: React.Dispatch<AuthAction>;
+  isLoading: boolean | undefined;
 }
 
-// Create context
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-// Create a provider component
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      setIsLoading(true);
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+
+        if (token) {
+          const user = await fetchUserData(token);
+          if (user) {
+            dispatch({
+              type: "LOGIN",
+              payload: { token, user },
+            });
+          } else {
+            console.error("Failed to fetch user data.");
+          }
+        } else {
+          // No token found, user is not logged in
+          console.log("No token found, user is not logged in.");
+        }
+      } catch (error) {
+        console.error("Error retrieving token from AsyncStorage:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkToken();
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ state, dispatch }}>
+    <AuthContext.Provider value={{ state, dispatch, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

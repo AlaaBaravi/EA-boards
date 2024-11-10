@@ -7,7 +7,7 @@ const ReservationsList = () => {
     <View>
       <View style={styles.rowView}>
         <Text style={mainstyles.title1}>My Reservations</Text>
-        <Pressable>
+        <Pressable android_ripple={{ color: "#28fd6c" }}>
           <Text style={styles.seeAll}>See all</Text>
         </Pressable>
       </View>
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     ...mainstyles.caption,
-    color: Colors.light.secondary,
+    color: Colors.light.primary,
   },
   description: {
     ...mainstyles.title2,
