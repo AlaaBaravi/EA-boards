@@ -14,6 +14,9 @@ import CustomButton from '@/components/ui/CustomButton'
 import { ScrollView } from 'react-native'
 import { BillboardType, Company, Region } from '@/constants/Types'
 import { router } from 'expo-router'
+import { useQuery } from '@tanstack/react-query'
+import Loading from '@/components/ui/Loading'
+import Error from '@/components/ui/Error'
 
 const bookBillboardSchema = z.object({
     company: z.number(),
@@ -57,18 +60,22 @@ export default function AddBillboardPage() {
         mode: "onSubmit"
     })
 
-    const { data, error, isLoading } = useSWR<
+    const { data, isError, error, isLoading } = useQuery<
         {
             companies: Company[],
             types: BillboardType[],
             regions: Region[]
-        }
-    >(`/info/get-book-billboard/form-info`, fetchFormValues);
+        },
+        Error
+    >(['form-info'], fetchFormValues);
 
-    if (isLoading) {
-        return (
-            <ActivityIndicator />
-        )
+
+    if (isLoading || data === null) {
+        return <Loading />;
+    }
+
+    if (isError) {
+        return <Error errorMessage={error.message} />;
     }
 
     const selectedKind = form.watch("kind")
