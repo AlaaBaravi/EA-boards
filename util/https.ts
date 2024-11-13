@@ -241,3 +241,14 @@ export const getRegions = async (): Promise<Region[]> => {
   });
   return response.data.data;
 };
+
+export const updateUserProfile = async (formData: FormData, token: string) => {
+  const response = await api.post("/user/update", formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "multipart/form-data",
+      Accept: "application/json",
+    },
+  });
+  return response.data;
+};

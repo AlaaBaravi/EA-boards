@@ -8,7 +8,10 @@ import {
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
 import { useEffect } from "react";
-import { AuthProvider, useAuth } from "@/store/authContext";
+import { AuthProvider } from "@/store/authContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -28,10 +31,12 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <RootSiblingParent>
-        <Slot />
-      </RootSiblingParent>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RootSiblingParent>
+          <Slot />
+        </RootSiblingParent>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

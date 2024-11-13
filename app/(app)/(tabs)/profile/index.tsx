@@ -34,7 +34,6 @@ const baseURL =
 
 export default function Profile() {
   const { logout } = useAuthActions();
-  const { state } = useAuth();
 
   const { data: userData, isLoading, isError, error } = useUserProfile();
 

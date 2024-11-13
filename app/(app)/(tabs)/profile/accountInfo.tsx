@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,12 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useForm, Controller } from "react-hook-form";
 import { Picker } from "@react-native-picker/picker";
 
-import axios, { isAxiosError } from "axios";
+import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import CustomHeader from "@/components/home/CustomHeader";
 import { mainstyles } from "@/constants/Styles";
@@ -23,27 +22,23 @@ import Constants from "expo-constants";
 import { Feather, Octicons } from "@expo/vector-icons";
 import CustomButton from "@/components/ui/CustomButton";
 import { Colors } from "@/constants/Colors";
-import { getIndustries } from "@/util/https";
+import { getIndustries, updateUserProfile } from "@/util/https";
 import { Industry } from "@/constants/Types";
 import { showToast } from "@/util/fn";
 import BusinessSizeOption from "@/components/ui/BusinessSizeOption";
 import Counter from "@/components/ui/Counter";
 import Loading from "@/components/ui/Loading";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const baseURL =
   Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
 
 const AccountInfo = () => {
+  const queryClient = useQueryClient();
   const { state, dispatch } = useAuth();
   const [selectedImage, setSelectedImage] = useState<{ uri: string } | null>(
     null
   );
-  const [industries, setIndustries] = useState<Industry[]>();
-  const [loading, setLoading] = useState(true);
-
-  const imageUri = selectedImage?.uri || `${baseURL}/${state.user?.image}`;
-
-  console.log(state.token);
 
   const {
     control,
@@ -65,26 +60,38 @@ const AccountInfo = () => {
     },
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const industriesData = await getIndustries();
-        setIndustries(industriesData);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          showToast(
-            err.response?.data?.message || "An error occurred",
-            "danger"
-          );
-        } else {
-          showToast("An unexpected error occurred", "danger");
-        }
-      } finally {
-        setLoading(false);
+  const {
+    data: industries,
+    isLoading: industriesLoading,
+    error: industriesError,
+  } = useQuery<Industry[], Error>(["industries"], getIndustries, {
+    onError: (error) =>
+      showToast(error.message || "An error occurred", "danger"),
+  });
+
+  const { mutate: updateProfile, isLoading: updatingProfile } = useMutation({
+    mutationFn: async (formData: FormData) => {
+      return await updateUserProfile(formData, state.token!);
+    },
+    onSuccess: (response) => {
+      showToast("Profile updated successfully", "success");
+      queryClient.invalidateQueries(["userProfile"]);
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        showToast(
+          error.response?.data?.message || "An error occurred",
+          "danger"
+        );
+      } else if (error instanceof Error) {
+        showToast(error.message || "An unexpected error occurred", "danger");
+      } else {
+        showToast("An unknown error occurred", "danger");
       }
-    };
-    fetchData();
-  }, []);
+    },
+  });
+
+  const imageUri = selectedImage?.uri || `${baseURL}/${state.user?.image}`;
 
   const pickImage = async (
     onChange: (value: { uri: string } | null) => void
@@ -111,72 +118,47 @@ const AccountInfo = () => {
     dispatch({ type: "UPDATE_USER", payload: data });
     const formData = new FormData();
 
-    try {
-      formData.append("phone", data.phone);
-      formData.append("name", data.name);
-      if (data.location) {
-        formData.append("location", data.location);
-      }
-      if (data.business_size) {
-        formData.append("business_size", data.business_size);
-      }
-      if (data.industry_type_id) {
-        formData.append("industry_type_id", data.industry_type_id.toString());
-      }
-      if (data.username) {
-        formData.append("username", data.username);
-      }
-      if (data.max_booking_days) {
-        formData.append("max_booking_days", data.max_booking_days.toString());
-      }
-      if (data.min_booking_days) {
-        formData.append("min_booking_days", data.min_booking_days.toString());
-      }
-      if (data.numbers_billboards) {
-        formData.append(
-          "numbers_billboards",
-          data.numbers_billboards.toString()
-        );
-      }
-      if (data.image) {
-        const response = await fetch(data.image.uri);
-        const blob = await response.blob();
-        formData.append("image", {
-          uri: data.image.uri,
-          name: `profile.${blob.type.split("/")[1]}`,
-          type: blob.type,
-        } as any);
-      }
-
-      const response = await axios.post(
-        `${baseURL}/api/user/update`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${state.token}`,
-            "Content-Type": "multipart/form-data",
-            Accept: "application/json",
-          },
-        }
-      );
-      console.log("Profile updated successfully:", response.data);
-      showToast("Profile updated successfully", "success");
-    } catch (error) {
-      if (isAxiosError(error)) {
-        console.error("Axios error:", error.message);
-        showToast(
-          error.response?.data?.message || "An error occurred",
-          "danger"
-        );
-      } else {
-        console.error("Error updating profile:", error);
-        showToast("An unexpected error occurred", "danger");
-      }
+    formData.append("phone", data.phone);
+    formData.append("name", data.name);
+    if (data.location) {
+      formData.append("location", data.location);
     }
+    if (data.business_size) {
+      formData.append("business_size", data.business_size);
+    }
+    if (data.industry_type_id) {
+      formData.append("industry_type_id", data.industry_type_id.toString());
+    }
+    if (data.username) {
+      formData.append("username", data.username);
+    }
+    if (data.max_booking_days) {
+      formData.append("max_booking_days", data.max_booking_days.toString());
+    }
+    if (data.min_booking_days) {
+      formData.append("min_booking_days", data.min_booking_days.toString());
+    }
+    if (data.numbers_billboards) {
+      formData.append("numbers_billboards", data.numbers_billboards.toString());
+    }
+    if (data.image) {
+      const response = await fetch(data.image.uri);
+      const blob = await response.blob();
+      formData.append("image", {
+        uri: data.image.uri,
+        name: `profile.${blob.type.split("/")[1]}`,
+        type: blob.type,
+      } as any);
+    }
+
+    updateProfile(formData);
   };
 
-  if (loading)
-    return <Loading />;
+  if (industriesLoading || updatingProfile) return <Loading />;
+  if (industriesError) {
+    showToast("Failed to load industries", "danger");
+    return null;
+  }
 
   return (
     <>
