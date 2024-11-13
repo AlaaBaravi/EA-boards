@@ -1,27 +1,50 @@
-import React, { ReactElement, useState } from "react";
-import { View, Text, Button, Image, TextInput, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useForm, Controller } from "react-hook-form";
-import axios from "axios";
-import { z } from "zod";
+import { Picker } from "@react-native-picker/picker";
+
+import axios, { isAxiosError } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
+import CustomHeader from "@/components/home/CustomHeader";
+import { mainstyles } from "@/constants/Styles";
+import { ProfileFormData, profileSchema } from "@/constants/Schemas";
+import { useAuth } from "@/store/authContext";
+import Constants from "expo-constants";
+import { Feather, Octicons } from "@expo/vector-icons";
+import CustomButton from "@/components/ui/CustomButton";
+import { Colors } from "@/constants/Colors";
+import { getIndustries } from "@/util/https";
+import { Industry } from "@/constants/Types";
+import { showToast } from "@/util/fn";
+import BusinessSizeOption from "@/components/ui/BusinessSizeOption";
+import Counter from "@/components/ui/Counter";
+import Loading from "@/components/ui/Loading";
 
-const profileSchema = z.object({
-  phone: z.string().min(1, "Phone is required"),
-  name: z.string().min(1, "Name is required"),
-  location: z.string().optional(),
-  business_size: z.string().optional(),
-  industry_type_id: z.number().optional(),
-  username: z.string().min(1, "Username is required"),
-  max_booking_days: z.number(),
-  min_booking_days: z.number(),
-  numbers_billboards: z.number(),
-  image: z.any().optional(),
-});
+const baseURL =
+  Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
 
-type ProfileFormData = z.infer<typeof profileSchema>;
+const AccountInfo = () => {
+  const { state, dispatch } = useAuth();
+  const [selectedImage, setSelectedImage] = useState<{ uri: string } | null>(
+    null
+  );
+  const [industries, setIndustries] = useState<Industry[]>();
+  const [loading, setLoading] = useState(true);
 
-const AccountInfo: React.FC = (): ReactElement => {
+  const imageUri = selectedImage?.uri || `${baseURL}/${state.user?.image}`;
+
+  console.log(state.token);
+
   const {
     control,
     handleSubmit,
@@ -29,167 +52,376 @@ const AccountInfo: React.FC = (): ReactElement => {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      phone: "",
-      name: "",
-      location: "",
-      business_size: "",
+      phone: state.user?.phone,
+      name: state.user?.name,
+      location: undefined,
+      business_size: undefined,
       industry_type_id: undefined,
-      username: "",
-      max_booking_days: 0,
+      username: undefined,
       min_booking_days: 0,
+      max_booking_days: 0,
       numbers_billboards: 0,
-      image: null,
+      image: undefined,
     },
   });
 
-  const [selectedImage, setSelectedImage] = useState<{ uri: string } | null>(
-    null
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const industriesData = await getIndustries();
+        setIndustries(industriesData);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          showToast(
+            err.response?.data?.message || "An error occurred",
+            "danger"
+          );
+        } else {
+          showToast("An unexpected error occurred", "danger");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const pickImage = async (
     onChange: (value: { uri: string } | null) => void
   ) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      const imageUri = result.assets[0].uri;
-      setSelectedImage({ uri: imageUri });
-      onChange({ uri: imageUri });
+      if (!result.canceled) {
+        const imageUri = result.assets[0].uri;
+        setSelectedImage({ uri: imageUri });
+        onChange({ uri: imageUri });
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      showToast("An error occurred while picking the image", "danger");
     }
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    dispatch({ type: "UPDATE_USER", payload: data });
+    const formData = new FormData();
+
     try {
-      const formData = new FormData();
       formData.append("phone", data.phone);
       formData.append("name", data.name);
-      formData.append("location", data.location || "");
-      formData.append("business_size", data.business_size || "");
-      formData.append(
-        "industry_type_id",
-        data.industry_type_id?.toString() || ""
-      );
-      formData.append("username", data.username);
-      formData.append("max_booking_days", data.max_booking_days.toString());
-      formData.append("min_booking_days", data.min_booking_days.toString());
-      formData.append("numbers_billboards", data.numbers_billboards.toString());
-
-      if (data.image && "uri" in data.image) {
+      if (data.location) {
+        formData.append("location", data.location);
+      }
+      if (data.business_size) {
+        formData.append("business_size", data.business_size);
+      }
+      if (data.industry_type_id) {
+        formData.append("industry_type_id", data.industry_type_id.toString());
+      }
+      if (data.username) {
+        formData.append("username", data.username);
+      }
+      if (data.max_booking_days) {
+        formData.append("max_booking_days", data.max_booking_days.toString());
+      }
+      if (data.min_booking_days) {
+        formData.append("min_booking_days", data.min_booking_days.toString());
+      }
+      if (data.numbers_billboards) {
+        formData.append(
+          "numbers_billboards",
+          data.numbers_billboards.toString()
+        );
+      }
+      if (data.image) {
+        const response = await fetch(data.image.uri);
+        const blob = await response.blob();
         formData.append("image", {
           uri: data.image.uri,
-          type: "image/jpeg", // Change based on the actual image type
-          name: "profile.jpg",
+          name: `profile.${blob.type.split("/")[1]}`,
+          type: blob.type,
         } as any);
       }
 
       const response = await axios.post(
-        "https://new.aeboards.net/api/user/update",
+        `${baseURL}/api/user/update`,
         formData,
         {
           headers: {
+            Authorization: `Bearer ${state.token}`,
             "Content-Type": "multipart/form-data",
             Accept: "application/json",
           },
         }
       );
+      console.log("Profile updated successfully:", response.data);
+      showToast("Profile updated successfully", "success");
     } catch (error) {
-      console.error("Error updating profile:", error);
+      if (isAxiosError(error)) {
+        console.error("Axios error:", error.message);
+        showToast(
+          error.response?.data?.message || "An error occurred",
+          "danger"
+        );
+      } else {
+        console.error("Error updating profile:", error);
+        showToast("An unexpected error occurred", "danger");
+      }
     }
   };
 
+  if (loading)
+    return <Loading />;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Update Profile</Text>
+    <>
+      <CustomHeader>
+        <Text style={mainstyles.title1}>Account info and settings</Text>
+      </CustomHeader>
 
-      {/* Phone Input */}
-      <Controller
-        name="phone"
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <>
-            <Text>Phone:</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={onChange}
-              value={value}
-            />
-            {errors.phone && (
-              <Text style={styles.error}>{errors.phone.message}</Text>
-            )}
-          </>
-        )}
-      />
-
-      {/* Name Input */}
-      <Controller
-        name="name"
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <>
-            <Text>Name:</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={onChange}
-              value={value}
-            />
-            {errors.name && (
-              <Text style={styles.error}>{errors.name.message}</Text>
-            )}
-          </>
-        )}
-      />
-
-      {/* Image Picker */}
-      <Controller
-        name="image"
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <>
-            <Text>Profile Image:</Text>
-            <>
-              {value ? (
-                <Image
-                  source={{ uri: value.uri }}
-                  style={{ width: 100, height: 100 }}
-                />
-              ) : null}
-              <Button
-                title="Pick an Image"
+      <ScrollView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          {/* Image Picker */}
+          <Controller
+            name="image"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <Pressable
+                style={styles.imageContainer}
                 onPress={() => pickImage(onChange)}
-              />
-            </>
-          </>
-        )}
-      />
+              >
+                <Image source={{ uri: imageUri }} style={styles.image} />
+                <View
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "rgba(44, 38, 38, 0.8)",
+                    padding: 6,
+                    borderRadius: 15,
+                  }}
+                >
+                  <Feather name="camera" size={18} color="white" />
+                </View>
+              </Pressable>
+            )}
+          />
 
-      {/* Submit Button */}
-      <Button title="Submit" onPress={handleSubmit(onSubmit)} />
-    </View>
+          <View style={{ gap: 12 }}>
+            <Text style={[mainstyles.title2]}>Business Information</Text>
+
+            {/* Company Name */}
+            <View>
+              <Text style={styles.label}>Business Name</Text>
+              <Controller
+                name="username"
+                control={control}
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      placeholder={state.user?.name}
+                      value={value}
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      style={{ flex: 1 }}
+                    />
+                    <Octicons
+                      name="pencil"
+                      size={16}
+                      color={Colors.light.icon}
+                    />
+                  </View>
+                )}
+              />
+            </View>
+
+            {/* Business Location */}
+            <View>
+              <Text style={styles.label}>Business Location</Text>
+              <Controller
+                control={control}
+                name="location"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      style={{ flex: 1 }}
+                      placeholder={state.user?.location || "Business Location"}
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                    <Octicons
+                      name="pencil"
+                      size={16}
+                      color={Colors.light.icon}
+                    />
+                  </View>
+                )}
+              />
+            </View>
+
+            {/* Industry Type */}
+            <View>
+              <Text style={styles.label}>Industry Type</Text>
+              <Controller
+                name="industry_type_id"
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={value}
+                      onValueChange={(itemValue) => onChange(itemValue)}
+                      dropdownIconColor={Colors.light.primary}
+                    >
+                      {industries?.map((option) => (
+                        <Picker.Item
+                          key={option.id}
+                          label={option.name_en}
+                          value={option.id}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                )}
+              />
+            </View>
+
+            {/* Business Size */}
+            <View>
+              <Text style={styles.text}>Business size?</Text>
+              <Controller
+                control={control}
+                name="business_size"
+                render={({ field: { onChange, value } }) => (
+                  <View style={styles.optionsContainer}>
+                    <BusinessSizeOption
+                      label="2-49"
+                      selected={value === "2-49"}
+                      onPress={() => onChange("2-49")}
+                      iconName="office-building"
+                    />
+                    <BusinessSizeOption
+                      label="50-499"
+                      selected={value === "50-499"}
+                      onPress={() => onChange("50-499")}
+                      iconName="office-building-outline"
+                    />
+                    <BusinessSizeOption
+                      label="500+"
+                      selected={value === "500+"}
+                      onPress={() => onChange("500+")}
+                      iconName="domain"
+                    />
+                  </View>
+                )}
+              />
+            </View>
+
+            {/* Counter for Minimum Booking days */}
+            <Controller
+              name="min_booking_days"
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <Counter
+                  label="Minimum Number Of Booking days In One Reservation :"
+                  min={1}
+                  max={100}
+                  value={value ?? 0}
+                  onChange={onChange}
+                />
+              )}
+            />
+
+            {/* Counter for Maximum Booking days */}
+            <Controller
+              name="max_booking_days"
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <Counter
+                  label="Maximum number of Booking days In one reservation :"
+                  min={1}
+                  max={100}
+                  value={value ?? 0}
+                  onChange={onChange}
+                />
+              )}
+            />
+
+            {/* Counter for Number of Billboards */}
+            <Controller
+              name="numbers_billboards"
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <Counter
+                  label="Number Of Billboards In One Reservation :"
+                  min={1}
+                  max={100}
+                  value={value ?? 0}
+                  onChange={onChange}
+                />
+              )}
+            />
+          </View>
+          <CustomButton title="Submit" onPress={handleSubmit(onSubmit)} />
+        </View>
+      </ScrollView>
+    </>
   );
 };
 
-// Styles
+export default AccountInfo;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    gap: 24,
   },
   title: {
     fontSize: 20,
     marginBottom: 20,
   },
-  input: {
-    borderWidth: 1,
-    padding: 10,
-    marginBottom: 10,
-  },
   error: {
-    color: "red",
+    ...mainstyles.caption,
+    color: Colors.light.danger,
+  },
+  imageContainer: {
+    height: 100,
+    width: 100,
+    borderRadius: 50,
+    marginHorizontal: "auto",
+    position: "relative",
+  },
+  image: { width: 100, height: 100, borderRadius: 50 },
+  label: {
+    ...mainstyles.caption,
+    color: Colors.light.icon,
+  },
+  inputContainer: {
+    ...mainstyles.input,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  pickerContainer: {
+    borderColor: Colors.light.primary,
+    borderBottomWidth: 1,
+    borderRadius: 5,
+  },
+  optionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
+  },
+  text: {
+    ...mainstyles.title1,
+    color: Colors.light.primary,
+    textAlign: "center",
+    marginVertical: 10,
   },
 });
-
-export default AccountInfo;

@@ -11,42 +11,25 @@ import { mainstyles } from "@/constants/Styles";
 import { Billboard } from "@/constants/Types";
 import { getBillboards } from "@/util/https";
 import { useAuth } from "@/store/authContext";
+import { useQuery } from "@tanstack/react-query";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
 
 export default function Billboards() {
   const { state } = useAuth();
-  const [billboards, setBillboards] = useState<Array<Billboard> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: billboards,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Billboard[], Error>(["billboards"], getBillboards);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const billboardsData = await getBillboards();
-        setBillboards(billboardsData);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "An error occurred");
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading || billboards === null) {
-    return <ActivityIndicator size="large" color={Colors.light.primary} />;
+  if (isLoading || billboards === null) {
+    return <Loading />;
   }
 
-  if (error) {
-    return (
-      <View>
-        <Text>Error: {error}</Text>
-      </View>
-    );
+  if (isError) {
+    return <Error errorMessage={error.message} />;
   }
 
   return (

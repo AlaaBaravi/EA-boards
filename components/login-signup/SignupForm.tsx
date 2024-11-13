@@ -14,8 +14,8 @@ import { FormContext, FormProvider } from "@/store/signupContext";
 import CompanyFormStep from "./CompanyFormStep";
 import IndividualFormStep from "./IndividualFormStep";
 import CompanyFormStepTwo from "./CompanyFormStepTwo";
-import { uriToBlob } from "@/util/fn";
 import Toast from "react-native-root-toast";
+import { showToast } from "@/util/fn";
 
 export default function Signup() {
   const { dispatch } = useAuth();
@@ -25,13 +25,21 @@ export default function Signup() {
 
   const handleNextStep = (data: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
-    if (step === 1) {
+    if (step === 1 && formData.type === "company") {
       setStep((prevStep) => prevStep + 1);
+    }
+
+    if (step === 1 && formData.type === "individual") {
+      onSubmit(formData);
     }
 
     if (step === 2) {
       onSubmit(formData);
     }
+  };
+
+  const handlePrevStep = () => {
+    setStep((prevStep) => prevStep - 1);
   };
 
   const handleSelectType = (type: "company" | "individual") => {
@@ -41,7 +49,7 @@ export default function Signup() {
   };
 
   const onSubmit = async (data: FormValues) => {
-    console.log(data.image);
+    console.log(data);
     try {
       const formData = new FormData();
       formData.append("type", data.type);
@@ -66,8 +74,8 @@ export default function Signup() {
         const blob = await response.blob();
         formData.append("image", {
           uri: data.image,
-          name: `photo.${blob.type.split("/")[1]}`, // e.g., "photo.jpeg"
-          type: blob.type, // e.g., "image/jpeg"
+          name: `photo.${blob.type.split("/")[1]}`,
+          type: blob.type,
         } as any);
       }
       if (data.files) {
@@ -80,28 +88,26 @@ export default function Signup() {
         });
       }
 
-      console.log(formData);
-      // const response = await axios.post(
-      //   "https://new.aeboards.net/api/auth/register",
-      //   formData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //       Accept: "application/json",
-      //     },
-      //   }
-      // );
-      // dispatch({
-      //   type: "LOGIN",
-      //   payload: {
-      //     token: response.data.data.token,
-      //     user: {
-      //       email: response.data.data.email,
-      //       accountType: response.data.data.type,
-      //     },
-      //   },
-      // });
-      Alert.alert("Success", "Please verify your email.");
+      const response = await axios.post(
+        "https://new.aeboards.net/api/auth/register",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+          },
+        }
+      );
+      dispatch({
+        type: "LOGIN",
+        payload: {
+          token: response.data.data.token,
+          user: {
+            email: response.data.data.email,
+            accountType: response.data.data.type,
+          },
+        },
+      });
       router.push({
         pathname: "/auth/verify-email",
       });
@@ -111,29 +117,16 @@ export default function Signup() {
           const apiErrorMessage = error.response.data?.message;
           console.log(apiErrorMessage);
           if (apiErrorMessage === "User already exist") {
-            Toast.show("This user already exists. Please log in..", {
-              duration: Toast.durations.LONG,
-              backgroundColor: Colors.light.danger,
-              opacity: 1,
-            });
+            showToast("This user already exists. Please log in..", "danger");
           } else {
-            Toast.show(
+            showToast(
               apiErrorMessage || "Registration failed. Please try again.",
-              {
-                duration: Toast.durations.LONG,
-                backgroundColor: Colors.light.danger,
-                opacity: 1,
-              }
+              "danger"
             );
           }
         }
       } else {
-        console.error(error);
-        Toast.show("An unexpected error occurred. Please try again.", {
-          duration: Toast.durations.LONG,
-          backgroundColor: Colors.light.danger,
-          opacity: 1,
-        });
+        showToast("An unexpected error occurred. Please try again.", "danger");
       }
     }
   };
@@ -158,13 +151,22 @@ export default function Signup() {
       ) : accountType === "company" ? (
         // Render Company Form Steps
         step === 1 ? (
-          <CompanyFormStep onNextStep={handleNextStep} />
+          <CompanyFormStep
+            onNextStep={handleNextStep}
+            onPrevStep={handlePrevStep}
+          />
         ) : (
-          <CompanyFormStepTwo onNextStep={handleNextStep} />
+          <CompanyFormStepTwo
+            onNextStep={handleNextStep}
+            onPrevStep={handlePrevStep}
+          />
         )
       ) : (
         // Render Individual Form Steps
-        <IndividualFormStep />
+        <IndividualFormStep
+          onNextStep={handleNextStep}
+          onPrevStep={handlePrevStep}
+        />
       )}
     </View>
   );

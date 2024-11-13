@@ -11,29 +11,13 @@ const _layout = () => {
       <Stack.Screen
         name="login"
         options={{
-          headerTitle: "",
-          headerLeft: () => (
-            <Feather
-              name="chevron-left"
-              size={32}
-              color={Colors.light.primary}
-              onPress={() => router.back()}
-            />
-          ),
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name="signup"
         options={{
-          headerTitle: "",
-          headerLeft: () => (
-            <Feather
-              name="chevron-left"
-              size={32}
-              color={Colors.light.primary}
-              onPress={() => router.back()}
-            />
-          ),
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -53,15 +37,13 @@ const _layout = () => {
       <Stack.Screen
         name="verify-email"
         options={{
-          headerTitle: "",
-          headerLeft: () => (
-            <Feather
-              name="chevron-left"
-              size={32}
-              color={Colors.light.primary}
-              onPress={() => router.back()}
-            />
-          ),
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="congrats"
+        options={{
+          headerShown: false,
         }}
       />
       <Stack.Screen

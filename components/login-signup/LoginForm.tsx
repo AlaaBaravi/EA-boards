@@ -19,6 +19,7 @@ import axios, { AxiosError } from "axios";
 import { mainstyles } from "@/constants/Styles";
 import Toast from "react-native-root-toast";
 import useAuthActions from "@/store/authActions";
+import { showToast } from "@/util/fn";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -76,10 +77,10 @@ const LoginForm = () => {
       console.log(response.data.data.token);
     } catch (error) {
       if (error instanceof AxiosError) {
-        setError(error.response?.data.message);
+        showToast(error.response?.data.message, "danger");
       } else {
         console.error(error);
-        Alert.alert("Error", "An unknown error occurred.");
+        showToast("An unknown error occurred.", "danger");
       }
     }
   };

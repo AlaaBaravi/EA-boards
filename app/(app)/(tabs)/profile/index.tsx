@@ -1,22 +1,17 @@
 import CustomHeader from "@/components/home/CustomHeader";
-import { Colors } from "@/constants/Colors";
 import { mainstyles } from "@/constants/Styles";
 import { UserProfile } from "@/constants/Types";
 import useAuthActions from "@/store/authActions";
 import { useAuth } from "@/store/authContext";
-import { fetchUserData, getInfo } from "@/util/https";
+import { getProfile } from "@/util/https";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { Href, Link } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import Constants from "expo-constants";
+import { useQuery } from "@tanstack/react-query";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface ProfileItem {
   title: string;
@@ -38,31 +33,17 @@ const baseURL =
   Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
 
 export default function Profile() {
-  const [userData, setUserData] = useState<UserProfile>();
-  const [isLoading, setIsLoading] = useState(false);
   const { logout } = useAuthActions();
   const { state } = useAuth();
 
+  const { data: userData, isLoading, isError, error } = useUserProfile();
+
   const imageUri = `${baseURL}/${userData?.image}`;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const userInfo = await fetchUserData(state.token!);
-        setUserData(userInfo);
-      } catch (error) {
-        console.error("Faild to fetch user data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (isLoading)
-    return <ActivityIndicator size={"large"} color={Colors.light.primary} />;
+  if (isLoading) return <Loading />;
+  if (isError) {
+    return <Error errorMessage={error.message} />;
+  }
 
   return (
     <>

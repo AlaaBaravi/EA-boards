@@ -1,50 +1,54 @@
 import axios from "axios";
+import { FC, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Pressable,
   Image,
-  Button,
   Dimensions,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-root-toast";
 
-import CustomButton from "../ui/CustomButton";
 import { mainstyles } from "@/constants/Styles";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/store/authContext";
-import { FC, useEffect, useState } from "react";
-import { BillboardType, Region } from "@/constants/Types";
-import Toast from "react-native-root-toast";
-import SwipeRating from "react-native-ratings/dist/SwipeRating";
 import { addBillboardSchema, BillboardFormData } from "@/constants/Schemas";
-import { getBillboardTypes, getRegions } from "@/util/https";
-import { Ionicons } from "@expo/vector-icons";
+import { addBillboard, getBillboardTypes, getRegions } from "@/util/https";
 import CustomInputField from "./CustomInputField";
 import CustomPickerField from "./CustomPickerField";
+import CustomButton from "../ui/CustomButton";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import Error from "../ui/Error";
+import Loading from "../ui/Loading";
+import { BillboardType, Region } from "@/constants/Types";
+import { showToast } from "@/util/fn";
 
 const width = Dimensions.get("window").width;
 
 const AddBillboardForm: FC = () => {
   const { state } = useAuth();
-  const [billboardTypes, setBillboardTypes] =
-    useState<Array<BillboardType> | null>(null);
-  const [regions, setRegions] = useState<Array<Region> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+
+  const {
+    data: billboardTypes,
+    isLoading: typesLoading,
+    error: typesError,
+  } = useQuery<BillboardType[], Error>(["billboardTypes"], getBillboardTypes);
+
+  const {
+    data: regions,
+    isLoading: regionsLoading,
+    error: regionsError,
+  } = useQuery<Region[], Error>(["regions"], getRegions);
 
   const {
     reset,
@@ -69,79 +73,17 @@ const AddBillboardForm: FC = () => {
 
   const selectedKind = watch("kind");
 
-  // console.log(state.token);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const billboardTypesData = await getBillboardTypes();
-        setBillboardTypes(billboardTypesData);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "An error occurred");
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const regionsData = await getRegions();
-        setRegions(regionsData);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "An error occurred");
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  // const pickImage = async () => {
-  //   const currentImages = getValues("files") || [];
-
-  //   if (currentImages.length >= 6) {
-  //     setErrorMessage("You can only upload a maximum of 6 images");
-  //     return;
-  //   }
-
-  //   const result = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsMultipleSelection: false,
-  //     quality: 1,
-  //   });
-
-  //   if (!result.canceled && result.assets && result.assets.length > 0) {
-  //     const newImages = [...currentImages, result.assets[0].uri];
-  //     setValue("files", newImages);
-  //     setErrorMessage("");
-  //   }
-  // };
-
   const pickImage = async () => {
     const result = await DocumentPicker.getDocumentAsync({
-      type: "*/*", // Adjust the file type as needed
+      type: "*/*",
       copyToCacheDirectory: true,
     });
 
-    // Check if the document picking was canceled
     if (result.canceled) {
       console.log("Document picking was canceled");
       return;
     }
 
-    // If assets exist, add them to the files array
     if (result.assets && Array.isArray(result.assets)) {
       const newFiles = result.assets.map((file) => ({
         uri: file.uri,
@@ -149,7 +91,6 @@ const AddBillboardForm: FC = () => {
         type: file.mimeType || "unknown",
       }));
 
-      // Use getValues to retrieve the current value of files
       const currentFiles = getValues("files") || [];
       setValue("files", [...currentFiles, ...newFiles]);
     }
@@ -161,89 +102,48 @@ const AddBillboardForm: FC = () => {
     setValue("files", updatedImages);
   };
 
-  const onSubmit = (data: BillboardFormData) => {
-    console.log("Done");
-    console.log(data);
-    const formData = new FormData();
-    if (data.name !== undefined) {
-      formData.append("name", data.name);
-    }
-    if (data.price_on_regular !== undefined) {
-      formData.append("price_on_regular", data.price_on_regular);
-    }
-    if (data.price_on_crowded !== undefined) {
-      formData.append("price_on_crowded", data.price_on_crowded);
-    }
-    if (data.start_date_crowded !== undefined) {
-      formData.append("start_date_crowded", data.start_date_crowded);
-    }
-    if (data.end_date_crowded !== undefined) {
-      formData.append("end_date_crowded", data.end_date_crowded);
-    }
-    if (data.number_booking_day !== undefined) {
-      formData.append("number_booking_day", data.number_booking_day.toString());
-    }
-    if (data.reviews !== undefined) {
-      formData.append("reviews", data.reviews);
-    }
-
-    if (data.files) {
-      data.files.forEach((file, index) => {
-        formData.append(`files[${index}]`, {
-          uri: file.uri,
-          name: file.name,
-          type: file.type,
-        } as any);
-      });
-    }
-
-    formData.append("title", data.title);
-    formData.append("kind", data.kind);
-    formData.append("region_id", data.region_id.toString());
-    formData.append("billboard_type_id", data.billboard_type_id.toString());
-    formData.append("location", data.location);
-
-    const addBillboard = async (authKey: string) => {
-      try {
-        const response = await axios.post(
-          "https://new.aeboards.net/api/billboard/add",
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${authKey}`,
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          }
-        );
-        Toast.show("Billboard added successfully.", {
-          duration: Toast.durations.LONG,
-          backgroundColor: "#198754",
-          opacity: 1,
-        });
+  const { mutate: addBillboardMutation, isLoading: isAdding } = useMutation(
+    (data: BillboardFormData) => addBillboard(data, state.token!),
+    {
+      onSuccess: () => {
+        showToast("Billboard added successfully.", "success");
         reset();
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error("Axios error:", error.response?.data);
-        } else {
-          console.error("Unknown error:", error);
-        }
-      }
-    };
-    const authKey = state.token!;
-    addBillboard(authKey);
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error?.response?.data?.message ||
+          "An error occurred while adding billboard";
+        showToast(errorMessage, "danger");
+      },
+    }
+  );
+
+  const onSubmit = (data: BillboardFormData) => {
+    addBillboardMutation(data);
   };
 
-  if (loading) {
-    return <ActivityIndicator size="large" color={Colors.light.primary} />;
+  const isLoading = typesLoading || regionsLoading || isAdding;
+  const error = typesError || regionsError;
+
+  if (isLoading) {
+    return <Loading />;
   }
 
   if (error) {
-    return (
-      <View>
-        <Text>Error: {error}</Text>
-      </View>
+    Toast.show(
+      typesError?.message ||
+        regionsError?.message ||
+        "An error occurred while loading data.",
+      {
+        backgroundColor: Colors.light.danger,
+      }
     );
+    {
+      Toast.show("An error occurred while loading data.", {
+        backgroundColor: Colors.light.danger,
+      });
+      return <Error errorMessage={error?.message} />;
+    }
   }
 
   return (
@@ -366,31 +266,6 @@ const AddBillboardForm: FC = () => {
           </View>
         )}
 
-        {/* Reviews Field */}
-        {/* <View style={styles.inputContainer}>
-          <Text style={mainstyles.caption}>Reviews:</Text>
-          <Controller
-            name="reviews"
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <SwipeRating
-                imageSize={32}
-                ratingCount={5}
-                startingValue={Number(value)}
-                onSwipeRating={(rating) =>
-                  setValue("reviews", rating.toString())
-                }
-                showRating={false}
-              />
-            )}
-          />
-        </View>
-        {errors.reviews && (
-          <Text style={{ color: Colors.light.danger }}>
-            {errors.reviews.message}
-          </Text>
-        )} */}
-
         {/* Price in regular Field */}
         {selectedKind === "paper" && (
           <CustomInputField
@@ -401,31 +276,6 @@ const AddBillboardForm: FC = () => {
           />
         )}
 
-        {/* Description Field */}
-        {/* <View style={styles.inputContainer}>
-          <Text style={mainstyles.caption}>Description:</Text>
-          <Controller
-            name="description"
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                editable
-                multiline
-                numberOfLines={4}
-                maxLength={40}
-                onChangeText={onChange}
-                value={value}
-                style={styles.input}
-              />
-            )}
-          />
-        </View>
-        {errors.description && (
-          <Text style={{ color: Colors.light.danger }}>
-            {errors.description.message}
-          </Text>
-        )} */}
-
         <View style={styles.inputContainer}>
           <Text style={mainstyles.caption}>Billboard Photos:</Text>
           <Pressable onPress={pickImage} style={styles.input}>
@@ -433,10 +283,6 @@ const AddBillboardForm: FC = () => {
             <Feather name="upload" size={24} color={Colors.light.icon} />
           </Pressable>
         </View>
-
-        {errorMessage ? (
-          <Text style={{ color: Colors.light.danger }}>{errorMessage}</Text>
-        ) : null}
 
         <Controller
           name="files"

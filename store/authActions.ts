@@ -1,7 +1,6 @@
-// store/authActions.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AuthAction, UserProfile } from "@/constants/Types";
-import { useAuth } from "./authContext"; // Importing useAuth from authContext
+import { UserProfile } from "@/constants/Types";
+import { useAuth } from "./authContext";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 
@@ -10,10 +9,8 @@ const useAuthActions = () => {
 
   const login = async (token: string, user: UserProfile) => {
     try {
-      // Save token to AsyncStorage
       await AsyncStorage.setItem("userToken", token);
 
-      // Retrieve token to confirm it was saved successfully
       const storedToken = await AsyncStorage.getItem("userToken");
       if (storedToken) {
         dispatch({ type: "LOGIN", payload: { token, user } });

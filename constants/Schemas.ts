@@ -41,8 +41,8 @@ export const addBillboardSchema = z
     billboard_type_id: z.number(),
     name: z.string().optional(),
     kind: z.enum(["paper", "digital"]),
-    start_date_crowded: z.string().optional(),
-    end_date_crowded: z.string().optional(),
+    start_date_crowded: z.date().optional(),
+    end_date_crowded: z.date().optional(),
     price_on_regular: z.string().optional(),
     price_on_crowded: z.string().optional(),
     number_booking_day: z.number().optional(),
@@ -113,3 +113,18 @@ export const addBillboardSchema = z
   });
 
 export type BillboardFormData = z.infer<typeof addBillboardSchema>;
+
+export const profileSchema = z.object({
+  phone: z.string().min(1, "Phone is required"),
+  name: z.string().min(1, "Name is required"),
+  location: z.string().optional(),
+  business_size: z.string().optional(),
+  industry_type_id: z.number().optional(),
+  username: z.string().optional(),
+  max_booking_days: z.number().optional(),
+  min_booking_days: z.number().optional(),
+  numbers_billboards: z.number().optional(),
+  image: z.any().optional(),
+});
+
+export type ProfileFormData = z.infer<typeof profileSchema>;

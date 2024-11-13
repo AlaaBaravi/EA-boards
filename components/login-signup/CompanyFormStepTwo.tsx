@@ -43,9 +43,10 @@ type CompanyFormStepTwoData = z.infer<typeof companyStepSchemaTwo>;
 
 interface Props {
   onNextStep: (data: CompanyFormStepTwoData) => void;
+  onPrevStep: () => void;
 }
 
-const CompanyFormStepTwo: FC<Props> = ({ onNextStep }) => {
+const CompanyFormStepTwo: FC<Props> = ({ onNextStep, onPrevStep }) => {
   const { formData } = useContext(FormContext);
   const [isPasswordVisable, setIsPasswordVisable] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -273,6 +274,7 @@ const CompanyFormStepTwo: FC<Props> = ({ onNextStep }) => {
         )}
       />
 
+      <CustomButton title="Back" onPress={onPrevStep} />
       <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
     </View>
   );

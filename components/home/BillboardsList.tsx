@@ -16,6 +16,7 @@ import axios from "axios";
 import { Billboard } from "@/constants/Types";
 import { useAuth } from "@/store/authContext";
 import BillboardCard from "../billboards/BillboardCard";
+import Loading from "../ui/Loading";
 
 const Billboards = () => {
   const { state } = useAuth();
@@ -60,7 +61,7 @@ const Billboards = () => {
   }, []);
 
   if (loading) {
-    return <ActivityIndicator size="large" color={Colors.light.primary} />;
+    return <Loading />;
   }
 
   if (error) {

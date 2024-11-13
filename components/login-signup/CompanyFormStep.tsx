@@ -21,6 +21,8 @@ import { getIndustries } from "@/util/https";
 import BusinessSizeOption from "../ui/BusinessSizeOption";
 import { mainstyles } from "@/constants/Styles";
 import { Feather } from "@expo/vector-icons";
+import { showToast } from "@/util/fn";
+import Loading from "../ui/Loading";
 
 const companyStepSchema = z.object({
   username: z.string().optional(),
@@ -35,19 +37,19 @@ const companyStepSchema = z.object({
         type: z.string(),
       })
     )
-    .optional(), // Assuming files are paths or URLs as strings
+    .optional(),
 });
 
 type CompanyFormStepData = z.infer<typeof companyStepSchema>;
 
 interface Props {
   onNextStep: (data: CompanyFormStepData) => void;
+  onPrevStep: () => void;
 }
 
-const CompanyFormStep: FC<Props> = ({ onNextStep }) => {
+const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
   const [industries, setIndustries] = useState<Industry[]>();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const {
     control,
@@ -73,9 +75,12 @@ const CompanyFormStep: FC<Props> = ({ onNextStep }) => {
         setIndustries(industriesData);
       } catch (err) {
         if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "An error occurred");
+          showToast(
+            err.response?.data?.message || "An error occurred",
+            "danger"
+          );
         } else {
-          setError("An unexpected error occurred");
+          showToast("An unexpected error occurred", "danger");
         }
       } finally {
         setLoading(false);
@@ -114,8 +119,7 @@ const CompanyFormStep: FC<Props> = ({ onNextStep }) => {
     onNextStep(data);
   };
 
-  if (loading)
-    return <ActivityIndicator size="large" color={Colors.light.primary} />;
+  if (loading) return <Loading />;
 
   return (
     <View style={styles.formContainer}>
@@ -228,6 +232,7 @@ const CompanyFormStep: FC<Props> = ({ onNextStep }) => {
         )}
       />
 
+      <CustomButton title="Back" onPress={onPrevStep} />
       <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
     </View>
   );
@@ -239,6 +244,12 @@ const styles = StyleSheet.create({
   formContainer: {
     gap: 12,
   },
+  input: {
+    borderColor: Colors.light.primary,
+    borderBottomWidth: 1,
+    padding: 8,
+    borderRadius: 5,
+  },
   pressable: {
     borderColor: Colors.light.primary,
     borderBottomWidth: 1,
@@ -247,12 +258,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-  input: {
-    borderColor: Colors.light.primary,
-    borderBottomWidth: 1,
-    padding: 8,
-    borderRadius: 5,
   },
   pickerContainer: {
     borderColor: Colors.light.primary,

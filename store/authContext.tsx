@@ -1,5 +1,5 @@
 import { AuthAction, AuthState } from "@/constants/Types";
-import { fetchUserData } from "@/util/https";
+import { getProfile } from "@/util/https";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   createContext,
@@ -61,7 +61,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
         const token = await AsyncStorage.getItem("userToken");
 
         if (token) {
-          const user = await fetchUserData(token);
+          const user = await getProfile(token);
           if (user) {
             dispatch({
               type: "LOGIN",

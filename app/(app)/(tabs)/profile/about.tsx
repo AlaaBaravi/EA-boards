@@ -18,6 +18,7 @@ import { mainstyles } from "@/constants/Styles";
 import { Colors } from "@/constants/Colors";
 import { info } from "@/constants/Types";
 import { getInfo } from "@/util/https";
+import Loading from "@/components/ui/Loading";
 
 const about = () => {
   const [data, setData] = useState<Array<info> | null>(null);
@@ -47,7 +48,7 @@ const about = () => {
   }, []);
 
   if (loading) {
-    return <ActivityIndicator size="large" color={Colors.light.primary} />;
+    return <Loading />;
   }
 
   if (error) {

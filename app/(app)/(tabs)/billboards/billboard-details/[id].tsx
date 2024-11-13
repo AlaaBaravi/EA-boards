@@ -1,73 +1,100 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { router, useLocalSearchParams } from "expo-router";
 import { mainstyles } from "@/constants/Styles";
 import axios from "axios";
 import { Colors } from "@/constants/Colors";
 import { Billboard } from "@/constants/Types";
-import { getBillboardById } from "@/util/https";
+import { deleteBillboardById, getBillboardById } from "@/util/https";
 import { useAuth } from "@/store/authContext";
 import BillboardImage from "@/components/billboards/BillboardImage";
 import { Ionicons, Octicons } from "@expo/vector-icons";
 import BillboardInfo from "@/components/billboards/BillboardInfo";
+import { showToast } from "@/util/fn";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Loading from "@/components/ui/Loading";
 
 const BillboardDetails = () => {
-  const [billboard, setBillboard] = useState<Billboard | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const { id } = useLocalSearchParams();
   const { state } = useAuth();
+  const queryClient = useQueryClient();
 
-  console.log(billboard);
+  const {
+    data: billboard,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Billboard, Error>(
+    ["billboard", id],
+    () => getBillboardById(id.toString(), state.token!),
+    {
+      enabled: !!id && !!state.token,
+    }
+  );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const billboardData = await getBillboardById(
-          id.toString(),
-          state.token!
-        );
-        setBillboard(billboardData);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "An error occurred");
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  const deleteMutation = useMutation(
+    () => deleteBillboardById(billboard!.id.toString(), state.token!),
+    {
+      onSuccess: () => {
+        showToast("The billboard has been deleted successfully.", "success");
+        queryClient.invalidateQueries(["billboards"]); // Refresh the billboards list
+        router.push("/(app)/(tabs)/billboards");
+      },
+      onError: () => {
+        showToast("An error occurred while deleting the billboard.", "danger");
+      },
+    }
+  );
 
-    fetchData();
-  }, []);
+  const confirmDelete = () => {
+    Alert.alert(
+      "Delete Billboard",
+      "Are you sure you want to delete this billboard?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Yes", onPress: () => deleteMutation.mutate() },
+      ],
+      { cancelable: true }
+    );
+  };
 
-  if (loading || billboard === null) {
-    return <ActivityIndicator size="large" color={Colors.light.primary} />;
+  if (isLoading) {
+    return <Loading />;
   }
 
-  if (error) {
+  if (isError) {
+    const errorMessage = axios.isAxiosError(error)
+      ? error.response?.data?.message || "An error occurred"
+      : "An unexpected error occurred";
+
+    showToast(errorMessage, "danger");
+
     return (
       <View>
-        <Text>Error: {error}</Text>
+        <Text>Error: {errorMessage}</Text>
       </View>
     );
   }
 
   return (
     <View style={mainstyles.container}>
-      <BillboardImage billboard={billboard} />
+      <BillboardImage billboard={billboard!} />
       <View style={styles.row}>
         <View style={styles.row}>
           <Octicons name="location" size={24} color="black" />
-          <Text style={mainstyles.title1}>{billboard.location}</Text>
+          <Text style={mainstyles.title1}>{billboard!.location}</Text>
         </View>
         <View style={[styles.row, { gap: 16 }]}>
-          <Octicons name="trash" size={24} color={Colors.light.danger} />
-          <Octicons name="pencil" size={24} color="black" />
+          <Octicons
+            name="trash"
+            size={24}
+            color={Colors.light.danger}
+            onPress={confirmDelete}
+          />
+          <Octicons name="pencil" size={24} color={Colors.light.icon} />
         </View>
       </View>
-      <BillboardInfo billboard={billboard} />
+      <BillboardInfo billboard={billboard!} />
     </View>
   );
 };

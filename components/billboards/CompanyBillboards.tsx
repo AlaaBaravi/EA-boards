@@ -47,15 +47,18 @@ const CompanyBillboards = ({ billboards }: { billboards: Billboard[] }) => {
         </Pressable>
       </View>
       {pressed === "available" ? (
-        <FlatList
-          style={styles.billboardContainer}
-          data={userBillboards}
-          inverted
-          renderItem={({ item }) => <BillboardCard billboard={item} />}
-          keyExtractor={(item) => item.id.toString()}
-        />
+        userBillboards.length > 0 ? (
+          <FlatList
+            style={styles.billboardContainer}
+            data={userBillboards}
+            renderItem={({ item }) => <BillboardCard billboard={item} />}
+            keyExtractor={(item) => item.id.toString()}
+          />
+        ) : (
+          <Text style={styles.text}>You have no available billboards yet</Text>
+        )
       ) : (
-        <Text>You have no reserved billboards yet</Text>
+        <Text style={styles.text}>You have no reserved billboards yet</Text>
       )}
     </>
   );
@@ -71,5 +74,8 @@ const styles = StyleSheet.create({
   },
   billboardContainer: {
     width: "100%",
+  },
+  text: {
+    ...mainstyles.caption,
   },
 });

@@ -26,7 +26,7 @@ export default function Home() {
     <>
       <CustomHeader>
         <Text style={styles.welcomeText}>Welcome Back</Text>
-        <Text style={styles.nameText}>{state.user?.name}</Text>
+        <Text style={styles.nameText}>{state.user?.username}</Text>
       </CustomHeader>
       <ScrollView>
         <View style={styles.container}>

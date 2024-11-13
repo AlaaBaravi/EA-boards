@@ -15,16 +15,16 @@ export interface User {
 export interface UserProfile {
   id: number;
   name: string;
-  username: string | null;
+  username: string | undefined;
   phone: string;
   email: string;
   token: string;
-  fcm_token: null;
-  industry_type_id: number | null;
+  fcm_token: undefined;
+  industry_type_id: number | undefined;
   type: "company" | "individual";
-  description: string | null;
-  business_size: string | null;
-  location: string | null;
+  description: string | undefined;
+  business_size: string | undefined;
+  location: string | undefined;
   verify_admin: string;
   image: string;
   favorites: [];
@@ -40,7 +40,7 @@ export interface LoginData {
 export interface AuthState {
   token: string | null;
   isLoggedIn: boolean;
-  user: User | null;
+  user: UserProfile | null;
 }
 
 // Action types
@@ -111,6 +111,7 @@ export type Billboard = {
   title: string;
   video_length: null;
   video_repetition: null;
+  number_booking_day: null;
 };
 
 export type info = {
