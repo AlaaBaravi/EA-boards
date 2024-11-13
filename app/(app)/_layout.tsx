@@ -15,7 +15,7 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+  <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="(tabs)"
         options={{ contentStyle: { backgroundColor: "white" } }}
