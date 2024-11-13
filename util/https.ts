@@ -1,6 +1,6 @@
 import { BillboardFormData } from "@/constants/Schemas";
 import { Billboard, BillboardType, Region, UserProfile } from "@/constants/Types";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Alert } from "react-native";
 
 export const BASE_URL = "https://new.aeboards.net/api";
@@ -35,17 +35,25 @@ export const getBillboards = async ({
     }
 } = {}) => {
     try {
-        const response = await api.post<{ data: { data: Billboard[] } }>(`/info/get_billboards`, {
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        }, {
-            params: filter
-        });
+        // Filter out undefined values from the filter object and convert each value to an array
+        const formattedFilters = filter
+            ? Object.fromEntries(
+                Object.entries(filter)
+                    .filter(([, value]) => value !== undefined)
+                    .map(([key, value]) => [key, [value]]) // Wrap each value in an array
+            )
+            : {};
+
+        console.log(formattedFilters)
+
+        const response = await api.post<{ data: { data: Billboard[] } }>(`/info/get_billboards`, formattedFilters);
+
         return response.data.data.data;
     } catch (error) {
         console.error("Error fetching billboards:", error);
+        if (error instanceof AxiosError) {
+            console.error(error.message)
+        }
         throw error;
     }
 };

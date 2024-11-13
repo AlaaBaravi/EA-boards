@@ -6,6 +6,8 @@ import { mainstyles } from "@/constants/Styles";
 import { FontAwesome } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { router } from "expo-router";
+import { Colors } from "@/constants/Colors";
+import CustomButton from "../ui/CustomButton";
 
 const baseURL =
     Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
@@ -76,15 +78,11 @@ const CardBody: FC<BillboardCardProps> = ({ billboard, isBooking }) => {
                 <Text style={{ color: "#2C2626A3" }}>
                     {billboard.description ? billboard.description : "---"}
                 </Text>
+                {
+                    isBooking &&
+                    <CustomButton title="Book Now" onPress={() => undefined} />
+                }
             </View>
-            {
-                isBooking &&
-                <Pressable style={{ backgroundColor: "#2C2626A3" }}>
-                    <Text>
-                        Book Now
-                    </Text>
-                </Pressable>
-            }
         </LinearGradient>
 
     )
@@ -106,6 +104,7 @@ const styles = StyleSheet.create({
     innerContainer: {
         justifyContent: "space-between",
         flex: 1,
+        gap: 8
     },
 
     row: {
