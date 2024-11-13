@@ -6,7 +6,6 @@ import CustomHeader from "@/components/home/CustomHeader";
 import CompanyBillboards from "@/components/billboards/CompanyBillboards";
 import AllBillboards from "@/components/billboards/AllBillboards";
 
-import { Colors } from "@/constants/Colors";
 import { mainstyles } from "@/constants/Styles";
 import { Billboard } from "@/constants/Types";
 import { getBillboards } from "@/util/https";
@@ -22,7 +21,7 @@ export default function Billboards() {
     isLoading,
     isError,
     error,
-  } = useQuery<Billboard[], Error>(["billboards"], getBillboards);
+  } = useQuery<Billboard[], Error>(["billboards"], () => getBillboards());
 
   if (isLoading || billboards === null) {
     return <Loading />;

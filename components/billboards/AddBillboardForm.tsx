@@ -18,8 +18,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-root-toast";
-import { Ionicons } from "@expo/vector-icons";
-import Toast from "react-native-root-toast";
 
 import { mainstyles } from "@/constants/Styles";
 import { Colors } from "@/constants/Colors";

@@ -20,15 +20,49 @@ export async function getProfile(token: string): Promise<UserProfile> {
   return response.data.data;
 }
 
-export const getBillboards = async () => {
-  const response = await api.post("/info/get_billboards", {
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
-  return response.data.data.data;
+export const getBillboards = async ({
+  filter,
+}: {
+  filter?: {
+    region_id?: string;
+    billboard_type_id?: string;
+    company_id?: string;
+    kind?: string;
+    start_time?: string;
+    end_time?: string;
+    page?: string;
+    length?: string;
+  };
+} = {}) => {
+  try {
+    const response = await api.post(
+      `/info/get_billboards`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      },
+      {
+        params: filter,
+      }
+    );
+    return response.data.data.data;
+  } catch (error) {
+    console.error("Error fetching billboards:", error);
+    throw error;
+  }
 };
+
+// export const getBillboards = async () => {
+//   const response = await api.post("/info/get_billboards", {
+//     headers: {
+//       "Content-Type": "application/json",
+//       Accept: "application/json",
+//     },
+//   });
+//   return response.data.data.data;
+// };
 
 export const getIndustries = async () => {
   const response = await api.get("/info/get_industries", {

@@ -54,11 +54,7 @@ const BillboardCard: FC<BillboardCardProps> = ({ billboard }) => {
               {billboard.billboard_type_id.text_en}
             </Text>
           </View>
-          <Text style={{ color: "#2C2626A3" }}>
-            {billboard.description.description
-              ? billboard.description.description
-              : "---"}
-          </Text>
+          <Text style={{ color: "#2C2626A3" }}>---</Text>
         </View>
       </LinearGradient>
     </Pressable>
