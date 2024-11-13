@@ -3,8 +3,9 @@ import { BillboardType, Region, UserProfile } from "@/constants/Types";
 import axios, { AxiosError } from "axios";
 import { Alert } from "react-native";
 
+export const BASE_URL = "https://new.aeboards.net/api";
 const api = axios.create({
-  baseURL: "https://new.aeboards.net/api",
+  baseURL: BASE_URL,
 });
 
 export async function getProfile(token: string): Promise<UserProfile> {
