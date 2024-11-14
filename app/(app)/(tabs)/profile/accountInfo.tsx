@@ -7,38 +7,46 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  Button,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { useForm, Controller } from "react-hook-form";
 import { Picker } from "@react-native-picker/picker";
-
-import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
-import CustomHeader from "@/components/home/CustomHeader";
+import Constants from "expo-constants";
+import { Octicons } from "@expo/vector-icons";
+
 import { mainstyles } from "@/constants/Styles";
 import { ProfileFormData, profileSchema } from "@/constants/Schemas";
-import { useAuth } from "@/store/authContext";
-import Constants from "expo-constants";
-import { Feather, Octicons } from "@expo/vector-icons";
-import CustomButton from "@/components/ui/CustomButton";
 import { Colors } from "@/constants/Colors";
-import { getIndustries, updateUserProfile } from "@/util/https";
-import { Industry } from "@/constants/Types";
-import { showToast } from "@/util/fn";
+
+import CustomHeader from "@/components/home/CustomHeader";
+import CustomButton from "@/components/ui/CustomButton";
 import BusinessSizeOption from "@/components/ui/BusinessSizeOption";
 import Counter from "@/components/ui/Counter";
 import Loading from "@/components/ui/Loading";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Error from "@/components/ui/Error";
+
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUpdateUser } from "@/hooks/useUpdateUser";
+import { useIndustries } from "@/hooks/useIndustries";
 
 const baseURL =
   Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
 
 const AccountInfo = () => {
-  const queryClient = useQueryClient();
-  const { state, dispatch } = useAuth();
-  const [selectedImage, setSelectedImage] = useState<{ uri: string } | null>(
-    null
-  );
+  const {
+    data: industries,
+    isLoading: industriesLoading,
+    error: industriesError,
+  } = useIndustries();
+
+  const {
+    data: userData,
+    isLoading: isUserData,
+    error: userError,
+  } = useUserProfile();
 
   const {
     control,
@@ -47,8 +55,8 @@ const AccountInfo = () => {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      phone: state.user?.phone,
-      name: state.user?.name,
+      phone: userData?.phone,
+      name: userData?.name,
       location: undefined,
       business_size: undefined,
       industry_type_id: undefined,
@@ -60,105 +68,34 @@ const AccountInfo = () => {
     },
   });
 
-  const {
-    data: industries,
-    isLoading: industriesLoading,
-    error: industriesError,
-  } = useQuery<Industry[], Error>(["industries"], getIndustries, {
-    onError: (error) =>
-      showToast(error.message || "An error occurred", "danger"),
-  });
+  const imageUri = `${baseURL}/${userData?.image}`;
 
-  const { mutate: updateProfile, isLoading: updatingProfile } = useMutation({
-    mutationFn: async (formData: FormData) => {
-      return await updateUserProfile(formData, state.token!);
-    },
-    onSuccess: (response) => {
-      showToast("Profile updated successfully", "success");
-      queryClient.invalidateQueries(["userProfile"]);
-    },
-    onError: (error) => {
-      if (axios.isAxiosError(error)) {
-        showToast(
-          error.response?.data?.message || "An error occurred",
-          "danger"
-        );
-      } else if (error instanceof Error) {
-        showToast(error.message || "An unexpected error occurred", "danger");
-      } else {
-        showToast("An unknown error occurred", "danger");
-      }
-    },
-  });
+  const pickImage = async (onChange: (value: string) => void) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-  const imageUri = selectedImage?.uri || `${baseURL}/${state.user?.image}`;
-
-  const pickImage = async (
-    onChange: (value: { uri: string } | null) => void
-  ) => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        const imageUri = result.assets[0].uri;
-        setSelectedImage({ uri: imageUri });
-        onChange({ uri: imageUri });
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      showToast("An error occurred while picking the image", "danger");
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      onChange(uri);
     }
   };
+
+  const { mutate: updateUserMutation, isPending: isUpdating } = useUpdateUser();
 
   const onSubmit = async (data: ProfileFormData) => {
-    dispatch({ type: "UPDATE_USER", payload: data });
-    const formData = new FormData();
-
-    formData.append("phone", data.phone);
-    formData.append("name", data.name);
-    if (data.location) {
-      formData.append("location", data.location);
-    }
-    if (data.business_size) {
-      formData.append("business_size", data.business_size);
-    }
-    if (data.industry_type_id) {
-      formData.append("industry_type_id", data.industry_type_id.toString());
-    }
-    if (data.username) {
-      formData.append("username", data.username);
-    }
-    if (data.max_booking_days) {
-      formData.append("max_booking_days", data.max_booking_days.toString());
-    }
-    if (data.min_booking_days) {
-      formData.append("min_booking_days", data.min_booking_days.toString());
-    }
-    if (data.numbers_billboards) {
-      formData.append("numbers_billboards", data.numbers_billboards.toString());
-    }
-    if (data.image) {
-      const response = await fetch(data.image.uri);
-      const blob = await response.blob();
-      formData.append("image", {
-        uri: data.image.uri,
-        name: `profile.${blob.type.split("/")[1]}`,
-        type: blob.type,
-      } as any);
-    }
-
-    updateProfile(formData);
+    console.log(data.image);
+    updateUserMutation(data);
   };
 
-  if (industriesLoading || updatingProfile) return <Loading />;
-  if (industriesError) {
-    showToast("Failed to load industries", "danger");
-    return null;
-  }
+  const isLoading = industriesLoading || isUpdating || isUserData;
+  const error = industriesError || userError;
+
+  if (isLoading) return <Loading />;
+  if (error) return <Error errorMessage={error.message} />;
 
   return (
     <>
@@ -168,29 +105,20 @@ const AccountInfo = () => {
 
       <ScrollView style={{ flex: 1 }}>
         <View style={styles.container}>
-          {/* Image Picker */}
+          {/* Image Picker controlled via Controller */}
           <Controller
-            name="image"
             control={control}
+            name="image"
             render={({ field: { onChange, value } }) => (
-              <Pressable
-                style={styles.imageContainer}
-                onPress={() => pickImage(onChange)}
-              >
-                <Image source={{ uri: imageUri }} style={styles.image} />
-                <View
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "rgba(44, 38, 38, 0.8)",
-                    padding: 6,
-                    borderRadius: 15,
-                  }}
-                >
-                  <Feather name="camera" size={18} color="white" />
-                </View>
-              </Pressable>
+              <>
+                <Button
+                  title="Pick an image from camera roll"
+                  onPress={() => pickImage(onChange)}
+                />
+                {value && (
+                  <Image source={{ uri: value }} style={styles.image} />
+                )}
+              </>
             )}
           />
 
@@ -206,11 +134,11 @@ const AccountInfo = () => {
                 render={({ field: { onChange, value, onBlur } }) => (
                   <View style={styles.inputContainer}>
                     <TextInput
-                      placeholder={state.user?.name}
+                      placeholder={userData?.username}
                       value={value}
                       onBlur={onBlur}
                       onChangeText={onChange}
-                      style={{ flex: 1 }}
+                      // style={{ flex: 1 }}
                     />
                     <Octicons
                       name="pencil"
@@ -232,7 +160,7 @@ const AccountInfo = () => {
                   <View style={styles.inputContainer}>
                     <TextInput
                       style={{ flex: 1 }}
-                      placeholder={state.user?.location || "Business Location"}
+                      placeholder={userData?.location || "Business Location"}
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}

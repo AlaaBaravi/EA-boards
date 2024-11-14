@@ -12,6 +12,7 @@ import { Colors } from "@/constants/Colors";
 import { getBillboards } from "@/util/https";
 import { Billboard } from "@/constants/Types";
 import BillboardCard from "../billboards/BillboardCard";
+import { router } from "expo-router";
 
 const MostRated = () => {
   const [billboards, setBillboards] = useState<Billboard[] | null>(null);
@@ -47,7 +48,7 @@ const MostRated = () => {
         <Text style={mainstyles.title1}>Most Rated</Text>
         <Pressable
           android_ripple={{ color: Colors.light.primary }}
-          onPress={() => console.log("PRESSED")}
+          onPress={() => router.push("/(app)/(tabs)/billboards")}
         >
           <Text style={styles.seeAll}>See all</Text>
         </Pressable>

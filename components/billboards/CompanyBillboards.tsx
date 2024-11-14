@@ -2,16 +2,35 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import React, { useState } from "react";
 import { mainstyles } from "@/constants/Styles";
 import BillboardCard from "./BillboardCard";
-import { useAuth } from "@/store/authContext";
-import { Billboard } from "@/constants/Types";
+import { useBillboards } from "@/hooks/billboards/useBillboards";
+import Loading from "../ui/Loading";
+import Error from "../ui/Error";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
-const CompanyBillboards = ({ billboards }: { billboards: Billboard[] }) => {
-  const { state } = useAuth();
+const CompanyBillboards = () => {
   const [pressed, setPressed] = useState<string>("available");
 
-  const userBillboards = billboards?.filter(
-    (billboard: { company: { name: string } }) =>
-      billboard.company.name === state.user?.name
+  const {
+    data: userData,
+    isPending: isUserData,
+    error: userError,
+  } = useUserProfile();
+
+  const {
+    data: billboards,
+    isPending: isBillboards,
+    error: billboardsError,
+  } = useBillboards();
+
+  const isPending = isBillboards || isUserData;
+  const error = billboardsError || userError;
+
+  if (isPending) return <Loading />;
+
+  if (error) return <Error errorMessage={error?.message} />;
+
+  const companyBillboards = billboards.filter(
+    (billboard) => billboard.company.id === userData.id
   );
 
   return (
@@ -47,10 +66,10 @@ const CompanyBillboards = ({ billboards }: { billboards: Billboard[] }) => {
         </Pressable>
       </View>
       {pressed === "available" ? (
-        userBillboards.length > 0 ? (
+        billboards.length > 0 ? (
           <FlatList
             style={styles.billboardContainer}
-            data={userBillboards}
+            data={companyBillboards}
             renderItem={({ item }) => <BillboardCard billboard={item} />}
             keyExtractor={(item) => item.id.toString()}
           />

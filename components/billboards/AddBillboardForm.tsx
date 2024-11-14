@@ -1,4 +1,3 @@
-import axios from "axios";
 import { FC, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
@@ -9,6 +8,7 @@ import {
   Pressable,
   Image,
   Dimensions,
+  Button,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -18,37 +18,40 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-root-toast";
-
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { mainstyles } from "@/constants/Styles";
 import { Colors } from "@/constants/Colors";
-import { useAuth } from "@/store/authContext";
 import { addBillboardSchema, BillboardFormData } from "@/constants/Schemas";
-import { addBillboard, getBillboardTypes, getRegions } from "@/util/https";
 import CustomInputField from "./CustomInputField";
 import CustomPickerField from "./CustomPickerField";
 import CustomButton from "../ui/CustomButton";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import Error from "../ui/Error";
 import Loading from "../ui/Loading";
-import { BillboardType, Region } from "@/constants/Types";
-import { showToast } from "@/util/fn";
+import { useRegions } from "@/hooks/useRegions";
+import { useBillboardTypes } from "@/hooks/useBillboardTypes";
+import { useAddBillboard } from "@/hooks/billboards/useAddBillboard";
+import { useAuth } from "@/store/authContext";
 
 const width = Dimensions.get("window").width;
 
 const AddBillboardForm: FC = () => {
+  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
+  const [endDatePickerVisible, setEndDatePickerVisible] = useState(false);
+
   const { state } = useAuth();
+  console.log(state.token);
 
   const {
     data: billboardTypes,
-    isLoading: typesLoading,
+    isPending: typesLoading,
     error: typesError,
-  } = useQuery<BillboardType[], Error>(["billboardTypes"], getBillboardTypes);
+  } = useBillboardTypes();
 
   const {
     data: regions,
-    isLoading: regionsLoading,
+    isPending: regionsLoading,
     error: regionsError,
-  } = useQuery<Region[], Error>(["regions"], getRegions);
+  } = useRegions();
 
   const {
     reset,
@@ -62,11 +65,15 @@ const AddBillboardForm: FC = () => {
     resolver: zodResolver(addBillboardSchema),
     defaultValues: {
       title: "",
-      name: "",
       location: "",
+      region_id: undefined,
+      billboard_type_id: undefined,
       kind: "paper",
-      region_id: 1,
-      billboard_type_id: 1,
+      start_date_crowded: undefined,
+      end_date_crowded: undefined,
+      price_on_regular: undefined,
+      price_on_crowded: undefined,
+      number_booking_day: undefined,
       files: [],
     },
   });
@@ -102,30 +109,21 @@ const AddBillboardForm: FC = () => {
     setValue("files", updatedImages);
   };
 
-  const { mutate: addBillboardMutation, isLoading: isAdding } = useMutation(
-    (data: BillboardFormData) => addBillboard(data, state.token!),
-    {
-      onSuccess: () => {
-        showToast("Billboard added successfully.", "success");
-        reset();
-      },
-      onError: (error: any) => {
-        const errorMessage =
-          error?.response?.data?.message ||
-          "An error occurred while adding billboard";
-        showToast(errorMessage, "danger");
-      },
-    }
-  );
+  const resetForm = () => {
+    reset();
+  };
+
+  const { mutate: addBillboardMutation, isPending: isAdding } =
+    useAddBillboard(resetForm);
 
   const onSubmit = (data: BillboardFormData) => {
     addBillboardMutation(data);
   };
 
-  const isLoading = typesLoading || regionsLoading || isAdding;
+  const isPending = typesLoading || regionsLoading || isAdding;
   const error = typesError || regionsError;
 
-  if (isLoading) {
+  if (isPending) {
     return <Loading />;
   }
 
@@ -242,19 +240,69 @@ const AddBillboardForm: FC = () => {
               label="Price On Regular"
             />
 
-            <CustomInputField
+            <Controller
+              control={control}
+              name="start_date_crowded"
+              render={({ field: { onChange, value } }) => (
+                <View>
+                  <Button
+                    title="Select Start Date"
+                    onPress={() => setStartDatePickerVisible(true)}
+                  />
+                  {value && <Text>Selected Date: {value.toDateString()}</Text>}
+                  {startDatePickerVisible && (
+                    <DateTimePicker
+                      value={value || new Date()}
+                      mode="time"
+                      display="default"
+                      onChange={(event, date) => {
+                        setStartDatePickerVisible(false);
+                        if (date) onChange(date);
+                      }}
+                    />
+                  )}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="end_date_crowded"
+              render={({ field: { onChange, value } }) => (
+                <View>
+                  <Button
+                    title="Select end Date"
+                    onPress={() => setEndDatePickerVisible(true)}
+                  />
+                  {value && <Text>Selected Date: {value.toDateString()}</Text>}
+                  {endDatePickerVisible && (
+                    <DateTimePicker
+                      value={value || new Date()}
+                      mode="time"
+                      display="default"
+                      onChange={(event, date) => {
+                        setEndDatePickerVisible(false);
+                        if (date) onChange(date);
+                      }}
+                    />
+                  )}
+                </View>
+              )}
+            />
+
+            {/* <CustomInputField
               control={control}
               errors={errors}
               fieldName="start_date_crowded"
               label="Start Time Crowded:"
-            />
+            /> */}
 
-            <CustomInputField
+            {/* <CustomInputField
               control={control}
               errors={errors}
               fieldName="end_date_crowded"
               label="End Time Crowded:"
-            />
+            /> */}
 
             <CustomInputField
               control={control}
@@ -327,7 +375,11 @@ const AddBillboardForm: FC = () => {
           )}
         />
 
-        <CustomButton title="Done" onPress={handleSubmit(onSubmit)} />
+        <CustomButton
+          title="Done"
+          onPress={handleSubmit(onSubmit)}
+          disabled={isPending}
+        />
       </ScrollView>
     </SafeAreaView>
   );

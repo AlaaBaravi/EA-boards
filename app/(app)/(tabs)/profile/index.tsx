@@ -16,17 +16,25 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 interface ProfileItem {
   title: string;
   icon: keyof typeof Feather.glyphMap;
-  to: Href<string | object>;
+  to: Href;
 }
 
 const ProfileTabs: ProfileItem[] = [
   {
     title: "Account Info & Settings",
     icon: "settings",
-    to: "/(tabs)/profile/accountInfo",
+    to: "/(app)/(tabs)/profile/accountInfo",
   },
-  { title: "App Settings", icon: "sliders", to: "/(tabs)/profile/appSettings" },
-  { title: "About & Feedback", icon: "info", to: "/(tabs)/profile/about" },
+  {
+    title: "App Settings",
+    icon: "sliders",
+    to: "/(app)/(tabs)/profile/appSettings",
+  },
+  {
+    title: "About & Feedback",
+    icon: "info",
+    to: "/(app)/(tabs)/profile/about",
+  },
 ];
 
 const baseURL =
@@ -34,10 +42,14 @@ const baseURL =
 
 export default function Profile() {
   const { logout } = useAuthActions();
+  const { state } = useAuth();
+
+  console.log(state.token);
 
   const { data: userData, isLoading, isError, error } = useUserProfile();
 
   const imageUri = `${baseURL}/${userData?.image}`;
+  console.log(imageUri);
 
   if (isLoading) return <Loading />;
   if (isError) {
@@ -54,7 +66,8 @@ export default function Profile() {
           <View style={styles.imageContainer}>
             <Image source={{ uri: imageUri }} style={styles.image} />
           </View>
-          <Text style={mainstyles.title1}>{userData?.name}</Text>
+
+          <Text style={mainstyles.title1}>{userData?.username}</Text>
         </View>
         <View style={styles.tabsContainer}>
           {ProfileTabs.map((profile) => (

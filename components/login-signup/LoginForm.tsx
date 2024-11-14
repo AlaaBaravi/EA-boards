@@ -91,14 +91,15 @@ const LoginForm = () => {
         control={control}
         name="email"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            keyboardType="email-address"
-          />
+          <View style={mainstyles.input}>
+            <TextInput
+              placeholder="Email"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              keyboardType="email-address"
+            />
+          </View>
         )}
       />
       {errors.email?.message && typeof errors.email.message === "string" && (
@@ -111,7 +112,7 @@ const LoginForm = () => {
         render={({ field: { onChange, onBlur, value } }) => (
           <View
             style={[
-              styles.input,
+              mainstyles.input,
               styles.passwordInput,
               {
                 borderColor:
@@ -128,6 +129,7 @@ const LoginForm = () => {
               onChangeText={onChange}
               value={value}
               style={{
+                flex: 1,
                 color:
                   error === "Email and password not valid"
                     ? Colors.light.danger
@@ -187,17 +189,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     fontSize: 16,
   },
-  input: {
-    height: 40,
-    borderColor: Colors.light.primary,
-    borderBottomWidth: 1,
-    marginBottom: 10,
-    padding: 8,
-    borderRadius: 5,
-  },
   passwordInput: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
   error: {
     color: Colors.light.danger,

@@ -5,6 +5,9 @@ import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { FC } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { TabTriggerSlotProps } from "expo-router/ui";
+import { ComponentProps, Ref, forwardRef } from "react";
+import { router } from "expo-router";
 
 interface CustomTabBarProps extends BottomTabBarProps {
   activeTab: string;
@@ -82,6 +85,40 @@ const CustomTabBar: FC<CustomTabBarProps> = ({
 };
 
 export default CustomTabBar;
+
+type Icon = ComponentProps<typeof FontAwesome>["name"];
+
+export type TabButtonProps = TabTriggerSlotProps & {
+  icon?: Icon;
+};
+
+export const TabButton = forwardRef(
+  ({ icon, children, isFocused, ...props }: TabButtonProps, ref: Ref<View>) => {
+    return (
+      <Pressable
+        ref={ref}
+        {...props}
+        style={[, isFocused ? { backgroundColor: "white" } : undefined]}
+      >
+        <View style={[styles.tabItem, isFocused && styles.curvedTab]}>
+          <FontAwesome
+            name={icon}
+            size={isFocused ? 30 : 24}
+            color={isFocused ? "white" : "gray"}
+          />
+          <Text
+            style={[
+              { fontSize: 16 },
+              isFocused ? { color: "white" } : undefined,
+            ]}
+          >
+            {children}
+          </Text>
+        </View>
+      </Pressable>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   tabBarContainer: {

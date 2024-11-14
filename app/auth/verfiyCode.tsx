@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 const verfiyCode = () => {
   const [token, setToken] = useState("");
   const router = useRouter();
-  const { email } = useLocalSearchParams(); // Retrieve the email from params
+  const { email } = useLocalSearchParams();
 
   const handleVerifyToken = () => {
     if (!token) {
@@ -13,7 +13,6 @@ const verfiyCode = () => {
       return;
     }
 
-    // Assuming token verification passes, navigate to ResetPasswordScreen with the token and email
     router.push({ pathname: "/auth/verfiyCode", params: { token, email } });
   };
 

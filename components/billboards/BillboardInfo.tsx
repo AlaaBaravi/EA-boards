@@ -38,12 +38,14 @@ const BillboardInfo = ({ billboard }: { billboard: Billboard }) => {
             style={styles.valueText}
           >{`$ ${billboard.price_on_regular} per day`}</Text>
         </View>
-        <View style={styles.row}>
-          <Text style={styles.keyText}>price on crowded</Text>
-          <Text
-            style={styles.valueText}
-          >{`$ ${billboard.price_on_crowded} per day`}</Text>
-        </View>
+        {billboard.kind === "digital" && (
+          <View style={styles.row}>
+            <Text style={styles.keyText}>price on crowded</Text>
+            <Text
+              style={styles.valueText}
+            >{`$ ${billboard.price_on_crowded} per day`}</Text>
+          </View>
+        )}
       </View>
 
       {billboard.kind === "digital" && (

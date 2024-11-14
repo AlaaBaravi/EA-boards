@@ -1,4 +1,12 @@
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import React, { useState } from "react";
 import axios from "axios";
 import { router } from "expo-router";
@@ -13,38 +21,25 @@ import { Colors } from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { resendTokenEmail } from "@/util/https";
 import { useAuth } from "@/store/authContext";
+import { useResendTokenEmail } from "@/hooks/useResendTokenEmail";
+import { showToast } from "@/util/fn";
 
 const forgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const { dispatch } = useAuth();
+
+  const { mutate: resendTokenEmailMutation, isPending: isSending } =
+    useResendTokenEmail();
 
   const handleForgotPassword = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email");
+      showToast("Please enter your email", "danger");
       return;
     }
 
-    try {
-      // setIsLoading(true);
-      // const response = await resendTokenEmail(email);
-      // console.log(response);
-
-      // dispatch({ type: "UPDATE_USER", payload: { email: email } });
-      router.push("/auth/resetPassword");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        Alert.alert(
-          "Error",
-          error.response?.data.message || "Failed to send reset email"
-        );
-      } else {
-        console.error("Unknown Error:", error);
-        Alert.alert("Error", "An unknown error occurred");
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    resendTokenEmailMutation(email);
+    dispatch({ type: "UPDATE_USER", payload: { email: email } });
+    router.push("/auth/resetPassword");
   };
 
   return (
@@ -55,18 +50,23 @@ const forgotPassword = () => {
         <Text style={styles.text}>Please enter your email.</Text>
       </View>
       <View style={styles.container}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-        <CustomButton
-          title="Next"
-          onPress={handleForgotPassword}
-          disabled={isLoading}
-        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
+          <CustomButton
+            title="Next"
+            onPress={handleForgotPassword}
+            disabled={isSending}
+          />
+        </KeyboardAvoidingView>
       </View>
       <RegisterLink />
     </LinearBackground>

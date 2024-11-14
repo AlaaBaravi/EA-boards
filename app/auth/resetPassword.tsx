@@ -1,17 +1,26 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, Alert, StyleSheet } from "react-native";
-import axios from "axios";
-import { router, useLocalSearchParams } from "expo-router";
+import { View, Text, Alert, StyleSheet } from "react-native";
 import LinearBackground from "@/components/ui/LinearBackground";
 import Logo from "@/components/ui/Logo";
 import { mainstyles } from "@/constants/Styles";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
 import WelcomeText from "@/components/ui/WelcomeText";
+import { OtpInput } from "react-native-otp-entry";
+import { Colors } from "@/constants/Colors";
+import CustomButton from "@/components/ui/CustomButton";
+import { useAuth } from "@/store/authContext";
+import { useConfirmToken } from "@/hooks/auth/useConfirmToken";
+import { router } from "expo-router";
 
 const ResetPassword = () => {
-  const handleOtpComplete = (otp: string) => {
-    Alert.alert("OTP Entered", otp);
-    // Add OTP verification logic here
+  const [code, setCode] = useState<string>();
+  const { state } = useAuth();
+  const { mutate: confirmTokenMutation, isPending } = useConfirmToken();
+
+  const handleReset = () => {
+    if (state.user?.email && code) {
+      confirmTokenMutation({ email: state.user?.email, token: code });
+    }
   };
 
   return (
@@ -24,19 +33,21 @@ const ResetPassword = () => {
 
       <Text style={styles.text}>Enter the code:</Text>
 
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <OTPInputView
-          style={{ width: "80%", height: 200 }}
-          pinCount={4}
-          codeInputFieldStyle={{
-            borderWidth: 1,
-            borderColor: "#000",
-            borderRadius: 5,
-          }}
-          codeInputHighlightStyle={{ borderColor: "#03DAC6" }}
-          onCodeFilled={(otp) => handleOtpComplete(otp)}
-        />
-      </View>
+      <OtpInput
+        numberOfDigits={4}
+        onTextChange={(text) => setCode(text)}
+        theme={{
+          containerStyle: { width: "80%" },
+          pinCodeContainerStyle: { borderColor: Colors.light.text },
+          pinCodeTextStyle: { color: "white" },
+          filledPinCodeContainerStyle: {
+            backgroundColor: Colors.light.primary,
+            borderColor: Colors.light.primary,
+          },
+        }}
+      />
+
+      <CustomButton title="done" onPress={handleReset} disabled={isPending} />
     </LinearBackground>
   );
 };

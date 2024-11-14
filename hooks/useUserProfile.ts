@@ -6,11 +6,10 @@ import { useAuth } from "@/store/authContext";
 export function useUserProfile() {
   const { state } = useAuth();
 
-  return useQuery<UserProfile, Error>(
-    ["userData", state.token],
-    () => getProfile(state.token!),
-    {
-      enabled: !!state.token,
-    }
-  );
+  return useQuery<UserProfile, Error>({
+    queryKey: ["userData", state.token],
+    queryFn: () => getProfile(state.token!),
+
+    enabled: !!state.token,
+  });
 }

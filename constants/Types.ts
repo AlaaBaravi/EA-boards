@@ -123,3 +123,14 @@ export type info = {
   title_en: string;
   updated_at: null;
 };
+
+export interface GetBillboardsParams {
+  region_id?: string;
+  billboard_type_id?: string;
+  company_id?: string;
+  kind?: string;
+  start_time?: string;
+  end_time?: string;
+  page?: number;
+  length?: number;
+}

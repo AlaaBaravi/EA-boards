@@ -10,14 +10,9 @@ interface LinearBackgroundType {
 
 const LinearBackground: FC<LinearBackgroundType> = ({ children }) => {
   return (
-    // <ImageBackground
-    //   style={mainstyles.container}
-    //   source={require("@/assets/images/background.jpg")}
-    // >
     <LinearGradient colors={["#FFFFFF", "#90C9A2"]} style={styles.gradient}>
       <View style={styles.container}>{children}</View>
     </LinearGradient>
-    // </ImageBackground>
   );
 };
 
@@ -27,9 +22,11 @@ const styles = StyleSheet.create({
   gradient: {
     ...StyleSheet.absoluteFillObject, // Makes the gradient cover the entire screen
     opacity: 0.95,
+    justifyContent: "center",
+    padding: 24,
   },
   container: {
-    ...mainstyles.container,
+    gap: 24,
     alignItems: "center",
     justifyContent: "center",
   },
