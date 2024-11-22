@@ -1,38 +1,18 @@
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+
+import { useCompanies } from "@/hooks/info/useCompanies";
 import { mainstyles } from "@/constants/Styles";
-import { getCompanies } from "@/util/https";
-import { Company } from "@/constants/Types";
-import CompanyCard from "../ui/CompanyCard";
-import { Colors } from "@/constants/Colors";
+
+import CompanyCard from "@/components/ui/CompanyCard";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
 
 const CompaniesList = () => {
-  const [companies, setCompanies] = useState<Company[]>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { data: companies, isPending, error } = useCompanies();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const companiesData = await getCompanies();
-        setCompanies(companiesData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (isLoading)
-    return <ActivityIndicator size={"large"} color={Colors.light.primary} />;
+  if (isPending) return <Loading />;
+  if (error) return <Error errorMessage={error.message} />;
 
   return (
     <View style={{ gap: 16 }}>

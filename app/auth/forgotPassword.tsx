@@ -21,7 +21,7 @@ import { Colors } from "@/constants/Colors";
 import { Feather } from "@expo/vector-icons";
 import { resendTokenEmail } from "@/util/https";
 import { useAuth } from "@/store/authContext";
-import { useResendTokenEmail } from "@/hooks/useResendTokenEmail";
+import { useResendTokenEmail } from "@/hooks/auth/useResendTokenEmail";
 import { showToast } from "@/util/fn";
 
 const forgotPassword = () => {

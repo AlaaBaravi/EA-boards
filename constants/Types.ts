@@ -1,4 +1,5 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
+import { Href } from "expo-router";
 
 export interface TabOption {
   name: string;
@@ -27,9 +28,19 @@ export interface UserProfile {
   location: string | undefined;
   verify_admin: string;
   image: string;
-  favorites: [];
+  favorites: Favorite[];
   files: [];
 }
+
+export type Favorite = {
+  billboard: Billboard;
+  id: number;
+};
+
+export type FavoriteData = {
+  billboard_id: number;
+  remove?: number;
+};
 
 export interface LoginData {
   email: string;
@@ -114,7 +125,7 @@ export type Billboard = {
   number_booking_day: null;
 };
 
-export type info = {
+export type Info = {
   created_at: null;
   id: number;
   text_ar: string;
@@ -125,12 +136,26 @@ export type info = {
 };
 
 export interface GetBillboardsParams {
-  region_id?: string;
-  billboard_type_id?: string;
-  company_id?: string;
+  region_id?: string[];
+  billboard_type_id?: string[];
+  company_id?: string[];
   kind?: string;
   start_time?: string;
   end_time?: string;
   page?: number;
   length?: number;
+}
+export type Description = {
+  location?: string;
+  billboard?: string;
+  height?: number;
+  width?: number;
+  from?: number;
+  to?: number;
+};
+
+export interface ProfileItem {
+  title: string;
+  icon: keyof typeof Feather.glyphMap;
+  to: Href;
 }

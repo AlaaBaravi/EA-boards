@@ -1,27 +1,27 @@
-import { ProfileFormData } from "@/constants/Schemas";
+import { FavoriteData } from "@/constants/Types";
 import { useAuth } from "@/store/authContext";
 import { showToast } from "@/util/fn";
-import { updateUserProfile } from "@/util/https";
+import { updateFavorite } from "@/util/https";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export const useUpdateUser = () => {
+export const useUpdateFavorites = () => {
   const queryClient = useQueryClient();
   const { state } = useAuth();
 
   return useMutation({
-    mutationFn: (data: ProfileFormData) =>
-      updateUserProfile(data, state.token!),
+    mutationFn: (data: FavoriteData) => updateFavorite(data, state.token!),
 
     onSuccess: () => {
-      showToast("User updated successfully.", "success");
+      showToast("Favorites updated successfully.", "success");
       queryClient.invalidateQueries({ queryKey: ["userData"] });
     },
 
     onError: (error: any) => {
       const errorMessage =
         error?.response?.data?.message ||
-        "An error occurred while updating user";
+        "An error occurred while adding billboard to favorite";
       showToast(errorMessage, "danger");
+      console.log(errorMessage);
     },
   });
 };

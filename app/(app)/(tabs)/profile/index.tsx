@@ -1,127 +1,73 @@
-import CustomHeader from "@/components/home/CustomHeader";
-import { mainstyles } from "@/constants/Styles";
-import { UserProfile } from "@/constants/Types";
-import useAuthActions from "@/store/authActions";
-import { useAuth } from "@/store/authContext";
-import { getProfile } from "@/util/https";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
-import { Href, Link } from "expo-router";
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import Constants from "expo-constants";
-import { useQuery } from "@tanstack/react-query";
+
+import { mainstyles } from "@/constants/Styles";
+import { ProfileTabs } from "@/constants/Data";
+import { useUserProfile } from "@/hooks/user/useUserProfile";
+
+import CustomHeader from "@/components/home/CustomHeader";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
-import { useUserProfile } from "@/hooks/useUserProfile";
-
-interface ProfileItem {
-  title: string;
-  icon: keyof typeof Feather.glyphMap;
-  to: Href;
-}
-
-const ProfileTabs: ProfileItem[] = [
-  {
-    title: "Account Info & Settings",
-    icon: "settings",
-    to: "/(app)/(tabs)/profile/accountInfo",
-  },
-  {
-    title: "App Settings",
-    icon: "sliders",
-    to: "/(app)/(tabs)/profile/appSettings",
-  },
-  {
-    title: "About & Feedback",
-    icon: "info",
-    to: "/(app)/(tabs)/profile/about",
-  },
-];
+import ProfileTab from "@/components/profile/ProfileTab";
+import Logout from "@/components/profile/Logout";
 
 const baseURL =
   Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
 
 export default function Profile() {
-  const { logout } = useAuthActions();
-  const { state } = useAuth();
-
-  console.log(state.token);
-
-  const { data: userData, isLoading, isError, error } = useUserProfile();
-
-  const imageUri = `${baseURL}/${userData?.image}`;
-  console.log(imageUri);
+  const { data: userData, isLoading, error } = useUserProfile();
 
   if (isLoading) return <Loading />;
-  if (isError) {
-    return <Error errorMessage={error.message} />;
-  }
+  if (error) return <Error errorMessage={error.message} />;
+
+  const imageUri = `${baseURL}/${
+    userData?.image
+  }?timestamp=${new Date().getTime()}`;
+
+  console.log(imageUri);
 
   return (
     <>
       <CustomHeader>
         <Text style={mainstyles.title1}>Profile</Text>
       </CustomHeader>
-      <View style={styles.container}>
+
+      <View style={mainstyles.container}>
         <View style={styles.info}>
           <View style={styles.imageContainer}>
             <Image source={{ uri: imageUri }} style={styles.image} />
           </View>
-
           <Text style={mainstyles.title1}>{userData?.username}</Text>
         </View>
+
         <View style={styles.tabsContainer}>
           {ProfileTabs.map((profile) => (
-            <Link key={profile.icon} href={profile.to} asChild>
-              <Pressable
-                android_ripple={{ color: "#28fd6c" }}
-                style={styles.tabs}
-              >
-                <View style={styles.titleContainer}>
-                  <Feather name={profile.icon} size={24} color="#2C2626A3" />
-                  <Text style={styles.title}>{profile.title}</Text>
-                </View>
-                <Feather name="chevron-right" size={24} color="black" />
-              </Pressable>
-            </Link>
+            <ProfileTab
+              key={profile.title}
+              title={profile.title}
+              icon={profile.icon}
+              to={profile.to}
+            />
           ))}
-          <Pressable style={styles.titleContainer} onPress={logout}>
-            <MaterialIcons name="logout" size={24} color="#E05252" />
-            <Text style={styles.logout}>Log out</Text>
-          </Pressable>
+          {userData?.type === "individual" && (
+            <ProfileTab
+              title={"Favorites"}
+              icon={"heart"}
+              to={"/(app)/(profile)/favorites"}
+            />
+          )}
         </View>
+
+        <Logout />
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    ...mainstyles.container,
-  },
   info: { gap: 8, alignItems: "center" },
-  tabs: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: 0.45,
-    borderBottomColor: "#C6A7A7",
-    paddingVertical: 12,
-  },
   tabsContainer: {
     gap: 16,
-  },
-  titleContainer: {
-    flexDirection: "row",
-    gap: 18,
-  },
-  title: {
-    fontFamily: "Poppins_400Regular",
-    fontSize: 14,
-  },
-  logout: {
-    color: "#E05252",
-    fontFamily: "Poppins_700Bold",
-    fontSize: 14,
   },
   imageContainer: {
     height: 100,

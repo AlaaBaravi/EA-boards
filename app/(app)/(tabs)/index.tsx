@@ -1,10 +1,4 @@
-import {
-  View,
-  StyleSheet,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { View, StyleSheet, Text, ScrollView } from "react-native";
 
 import { mainstyles } from "@/constants/Styles";
 import ImageOverlay from "@/components/home/ImageOverlay";
@@ -16,11 +10,13 @@ import { useAuth } from "@/store/authContext";
 import PopularLocations from "@/components/home/PopularLocations";
 import MostRated from "@/components/home/MostRated";
 import CompaniesList from "@/components/home/CompaniesList";
+import Loading from "@/components/ui/Loading";
 
 export default function Home() {
   const { state, isLoading } = useAuth();
+  console.log(state.token);
 
-  if (isLoading) return <ActivityIndicator />;
+  if (isLoading) return <Loading />;
 
   return (
     <>

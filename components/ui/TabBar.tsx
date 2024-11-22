@@ -7,7 +7,6 @@ import { FC } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { TabTriggerSlotProps } from "expo-router/ui";
 import { ComponentProps, Ref, forwardRef } from "react";
-import { router } from "expo-router";
 
 interface CustomTabBarProps extends BottomTabBarProps {
   activeTab: string;
@@ -17,7 +16,6 @@ interface CustomTabBarProps extends BottomTabBarProps {
 const CustomTabBar: FC<CustomTabBarProps> = ({
   state,
   navigation,
-  activeTab,
   setActiveTab,
 }) => {
   const { state: authState } = useAuth();
@@ -39,16 +37,17 @@ const CustomTabBar: FC<CustomTabBarProps> = ({
     { name: "profile/index", label: "Profile", icon: "user" },
   ];
 
+  const currentRouteName = state.routes[state.index]?.name;
+
   return (
     <View style={styles.tabBarContainer}>
       {tabOptions.map((tabData, index) => {
-        const route = state.routes.find((r) => r.name === tabData.name);
-        const isFocused = activeTab === route?.name;
+        const isFocused = currentRouteName === tabData.name;
 
         const onPress = () => {
-          if (route) {
-            setActiveTab(route.name);
-            navigation.navigate(route.name);
+          if (tabData.name !== currentRouteName) {
+            setActiveTab(tabData.name);
+            navigation.navigate(tabData.name);
           }
         };
 

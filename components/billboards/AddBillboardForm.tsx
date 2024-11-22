@@ -1,5 +1,3 @@
-import { FC, useState } from "react";
-import Feather from "@expo/vector-icons/Feather";
 import {
   View,
   Text,
@@ -8,39 +6,31 @@ import {
   Pressable,
   Image,
   Dimensions,
-  Button,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import * as DocumentPicker from "expo-document-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import Toast from "react-native-root-toast";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons, Feather } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+
 import { mainstyles } from "@/constants/Styles";
 import { Colors } from "@/constants/Colors";
 import { addBillboardSchema, BillboardFormData } from "@/constants/Schemas";
-import CustomInputField from "./CustomInputField";
-import CustomPickerField from "./CustomPickerField";
-import CustomButton from "../ui/CustomButton";
-import Error from "../ui/Error";
-import Loading from "../ui/Loading";
-import { useRegions } from "@/hooks/useRegions";
-import { useBillboardTypes } from "@/hooks/useBillboardTypes";
+import { useRegions } from "@/hooks/info/useRegions";
+import { useBillboardTypes } from "@/hooks/info/useBillboardTypes";
 import { useAddBillboard } from "@/hooks/billboards/useAddBillboard";
-import { useAuth } from "@/store/authContext";
+
+import CustomButton from "@/components/ui/CustomButton";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
+import CustomPickerField from "@/components/ui/CustomPickerField";
+import CustomTextInput from "@/components/ui/CustomTextInput";
+import CustomTimePicker from "../ui/CustomTimePicker";
 
 const width = Dimensions.get("window").width;
 
-const AddBillboardForm: FC = () => {
-  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
-  const [endDatePickerVisible, setEndDatePickerVisible] = useState(false);
-
-  const { state } = useAuth();
-  console.log(state.token);
-
+const AddBillboardForm = () => {
   const {
     data: billboardTypes,
     isPending: typesLoading,
@@ -66,9 +56,15 @@ const AddBillboardForm: FC = () => {
     defaultValues: {
       title: "",
       location: "",
-      region_id: undefined,
-      billboard_type_id: undefined,
       kind: "paper",
+      location_description: undefined,
+      billboard_description: undefined,
+      width_description: undefined,
+      height_description: undefined,
+      reach_from_description: undefined,
+      reach_to_description: undefined,
+      region_id: 1,
+      billboard_type_id: 1,
       start_date_crowded: undefined,
       end_date_crowded: undefined,
       price_on_regular: undefined,
@@ -81,13 +77,20 @@ const AddBillboardForm: FC = () => {
   const selectedKind = watch("kind");
 
   const pickImage = async () => {
+    const currentFiles = getValues("files") || [];
+
+    // Check if the user already uploaded 6 files
+    if (currentFiles.length >= 6) {
+      alert("You can upload a maximum of 6 images.");
+      return;
+    }
+
     const result = await DocumentPicker.getDocumentAsync({
-      type: "*/*",
+      type: "image/*", // Only allow images
       copyToCacheDirectory: true,
     });
 
     if (result.canceled) {
-      console.log("Document picking was canceled");
       return;
     }
 
@@ -98,7 +101,6 @@ const AddBillboardForm: FC = () => {
         type: file.mimeType || "unknown",
       }));
 
-      const currentFiles = getValues("files") || [];
       setValue("files", [...currentFiles, ...newFiles]);
     }
   };
@@ -120,56 +122,33 @@ const AddBillboardForm: FC = () => {
     addBillboardMutation(data);
   };
 
-  const isPending = typesLoading || regionsLoading || isAdding;
+  const isPending = typesLoading || regionsLoading;
   const error = typesError || regionsError;
 
-  if (isPending) {
-    return <Loading />;
-  }
-
-  if (error) {
-    Toast.show(
-      typesError?.message ||
-        regionsError?.message ||
-        "An error occurred while loading data.",
-      {
-        backgroundColor: Colors.light.danger,
-      }
-    );
-    {
-      Toast.show("An error occurred while loading data.", {
-        backgroundColor: Colors.light.danger,
-      });
-      return <Error errorMessage={error?.message} />;
-    }
-  }
+  if (isPending) return <Loading />;
+  if (error) return <Error errorMessage={error.message} />;
 
   return (
     <SafeAreaView>
-      <View style={{ flexDirection: "row", gap: 100, alignItems: "center" }}>
-        <Feather
-          name="chevron-left"
-          size={32}
-          color={Colors.light.primary}
-          onPress={() => router.back()}
-        />
-        <Text style={mainstyles.title1}>Add Billboard</Text>
-      </View>
-
       <ScrollView contentContainerStyle={styles.form}>
-        {/* Location Field */}
-        <CustomInputField
+        <CustomTextInput
           control={control}
-          errors={errors}
-          fieldName="location"
+          error={errors.location}
+          name="location"
           label="Location:"
         />
 
-        {/* Region Field */}
+        <CustomTextInput
+          control={control}
+          error={errors.location_description}
+          name="location_description"
+          label="location description:"
+        />
+
         <CustomPickerField
           control={control}
-          errors={errors}
-          fieldName="region_id"
+          error={errors.region_id}
+          name="region_id"
           label="Region:"
         >
           {regions?.map((option) => (
@@ -181,27 +160,24 @@ const AddBillboardForm: FC = () => {
           ))}
         </CustomPickerField>
 
-        {/* Title Field */}
-        <CustomInputField
+        <CustomTextInput
           control={control}
-          errors={errors}
-          fieldName="title"
+          error={errors.title}
+          name="title"
           label="Billboard Title:"
         />
 
-        {/* Name Field */}
-        <CustomInputField
+        <CustomTextInput
           control={control}
-          errors={errors}
-          fieldName="name"
+          error={errors.name}
+          name="name"
           label="Billboard Name:"
         />
 
-        {/* Billboard Type Field */}
         <CustomPickerField
           control={control}
-          errors={errors}
-          fieldName="billboard_type_id"
+          error={errors.billboard_type_id}
+          name="billboard_type_id"
           label="Billboard Type:"
         >
           {billboardTypes?.map((option) => (
@@ -213,11 +189,10 @@ const AddBillboardForm: FC = () => {
           ))}
         </CustomPickerField>
 
-        {/* Kind Field */}
         <CustomPickerField
           control={control}
-          errors={errors}
-          fieldName="kind"
+          error={errors.kind}
+          name="kind"
           label="Billboard Kind:"
         >
           <Picker.Item label="digital" value="digital" />
@@ -226,103 +201,131 @@ const AddBillboardForm: FC = () => {
 
         {selectedKind === "digital" && (
           <View style={styles.digital}>
-            <CustomInputField
+            <CustomTextInput
               control={control}
-              errors={errors}
-              fieldName="price_on_crowded"
-              label="Price On Crowded:"
-            />
-
-            <CustomInputField
-              control={control}
-              errors={errors}
-              fieldName="price_on_regular"
+              error={errors.price_on_regular}
+              name="price_on_regular"
               label="Price On Regular"
+              keyboardType="number-pad"
             />
 
-            <Controller
+            <CustomTextInput
+              control={control}
+              error={errors.price_on_crowded}
+              name="price_on_crowded"
+              label="Price On Crowded:"
+              keyboardType="number-pad"
+            />
+
+            <CustomTimePicker
               control={control}
               name="start_date_crowded"
-              render={({ field: { onChange, value } }) => (
-                <View>
-                  <Button
-                    title="Select Start Date"
-                    onPress={() => setStartDatePickerVisible(true)}
-                  />
-                  {value && <Text>Selected Date: {value.toDateString()}</Text>}
-                  {startDatePickerVisible && (
-                    <DateTimePicker
-                      value={value || new Date()}
-                      mode="time"
-                      display="default"
-                      onChange={(event, date) => {
-                        setStartDatePickerVisible(false);
-                        if (date) onChange(date);
-                      }}
-                    />
-                  )}
-                </View>
-              )}
+              label="Start Time Crowded"
             />
 
-            <Controller
+            <CustomTimePicker
               control={control}
               name="end_date_crowded"
-              render={({ field: { onChange, value } }) => (
-                <View>
-                  <Button
-                    title="Select end Date"
-                    onPress={() => setEndDatePickerVisible(true)}
-                  />
-                  {value && <Text>Selected Date: {value.toDateString()}</Text>}
-                  {endDatePickerVisible && (
-                    <DateTimePicker
-                      value={value || new Date()}
-                      mode="time"
-                      display="default"
-                      onChange={(event, date) => {
-                        setEndDatePickerVisible(false);
-                        if (date) onChange(date);
-                      }}
-                    />
-                  )}
-                </View>
-              )}
+              label="End Time Crowded"
             />
 
-            {/* <CustomInputField
+            <CustomTextInput
               control={control}
-              errors={errors}
-              fieldName="start_date_crowded"
-              label="Start Time Crowded:"
-            /> */}
+              error={errors.video_length}
+              name="video_length"
+              label="Video lenght:"
+              keyboardType="number-pad"
+            />
 
-            {/* <CustomInputField
+            <CustomTextInput
               control={control}
-              errors={errors}
-              fieldName="end_date_crowded"
-              label="End Time Crowded:"
-            /> */}
+              error={errors.video_repetition}
+              name="video_repetition"
+              label="Video repetition:"
+              keyboardType="number-pad"
+            />
 
-            <CustomInputField
+            <CustomTextInput
               control={control}
-              errors={errors}
-              fieldName="number_booking_day"
+              error={errors.number_booking_day}
+              name="number_booking_day"
               label="Number Of Booking Days:"
-              isNumeric={true}
+              keyboardType="number-pad"
             />
           </View>
         )}
 
-        {/* Price in regular Field */}
+        <CustomTextInput
+          control={control}
+          error={errors.reviews}
+          name="reviews"
+          label="reviews"
+          keyboardType="number-pad"
+          containerStyle={{ flex: 1 }}
+        />
+
         {selectedKind === "paper" && (
-          <CustomInputField
+          <CustomTextInput
             control={control}
-            errors={errors}
-            fieldName="price_on_regular"
+            error={errors.price_on_regular}
+            name="price_on_regular"
             label="Price per day:"
+            keyboardType="number-pad"
           />
         )}
+
+        <View>
+          <Text style={mainstyles.caption}>Size:</Text>
+          <View style={styles.size}>
+            <CustomTextInput
+              control={control}
+              error={errors.width_description}
+              name="width_description"
+              placeholder="EX: 6"
+              keyboardType="number-pad"
+              containerStyle={{ flex: 1 }}
+            />
+            <Text>x</Text>
+            <CustomTextInput
+              control={control}
+              error={errors.height_description}
+              name="height_description"
+              placeholder="EX: 2"
+              keyboardType="number-pad"
+              containerStyle={{ flex: 1 }}
+            />
+          </View>
+        </View>
+
+        <View>
+          <Text style={mainstyles.caption}>Reach Per hour:</Text>
+          <View style={styles.size}>
+            <CustomTextInput
+              control={control}
+              error={errors.reach_from_description}
+              name="reach_from_description"
+              placeholder="EX: 500"
+              keyboardType="number-pad"
+              containerStyle={{ flex: 1 }}
+            />
+            <Text>x</Text>
+            <CustomTextInput
+              control={control}
+              error={errors.reach_to_description}
+              name="reach_to_description"
+              placeholder="EX: 2500"
+              keyboardType="number-pad"
+              containerStyle={{ flex: 1 }}
+            />
+          </View>
+        </View>
+
+        <CustomTextInput
+          control={control}
+          error={errors.billboard_description}
+          name="billboard_description"
+          label="Billboard Description:"
+        />
 
         <View style={styles.inputContainer}>
           <Text style={mainstyles.caption}>Billboard Photos:</Text>
@@ -376,9 +379,9 @@ const AddBillboardForm: FC = () => {
         />
 
         <CustomButton
-          title="Done"
+          title={isAdding ? "Adding" : "Add"}
           onPress={handleSubmit(onSubmit)}
-          disabled={isPending}
+          disabled={isAdding}
         />
       </ScrollView>
     </SafeAreaView>
@@ -387,36 +390,30 @@ const AddBillboardForm: FC = () => {
 
 const styles = StyleSheet.create({
   form: {
-    paddingBottom: 100,
-    paddingTop: 20,
-    paddingHorizontal: 20,
+    padding: 20,
     gap: 12,
-    alignItems: "center",
-  },
-  pickerContainer: {
-    borderColor: Colors.light.primary,
-    borderWidth: 1,
-    borderRadius: 5,
-    width: "100%",
   },
   inputContainer: {
     width: "100%",
     gap: 4,
   },
   input: {
-    borderColor: Colors.light.primary,
-    borderWidth: 1,
+    ...mainstyles.input,
     padding: 8,
-    borderRadius: 5,
-    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-
   digital: {
     width: "80%",
     gap: 12,
+    margin: "auto",
+  },
+  size: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
   },
 });
 

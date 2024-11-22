@@ -16,6 +16,7 @@ export const useAddBillboard = (reset: () => void) => {
     onSuccess: () => {
       showToast("Billboard added successfully.", "success");
       queryClient.invalidateQueries({ queryKey: ["billboards"] });
+      router.replace("/(app)/(tabs)/billboards");
       reset();
     },
 
@@ -24,6 +25,7 @@ export const useAddBillboard = (reset: () => void) => {
         error?.response?.data?.message ||
         "An error occurred while adding billboard";
       showToast(errorMessage, "danger");
+      console.error(error.response.data.message);
     },
   });
 };

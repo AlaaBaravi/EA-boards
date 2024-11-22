@@ -23,6 +23,10 @@ import { mainstyles } from "@/constants/Styles";
 import { Feather } from "@expo/vector-icons";
 import { showToast } from "@/util/fn";
 import Loading from "../ui/Loading";
+import CustomTextInput from "../ui/CustomTextInput";
+import { useIndustries } from "@/hooks/info/useIndustries";
+import Error from "../ui/Error";
+import CustomPickerField from "../ui/CustomPickerField";
 
 const companyStepSchema = z.object({
   username: z.string().optional(),
@@ -48,9 +52,6 @@ interface Props {
 }
 
 const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
-  const [industries, setIndustries] = useState<Industry[]>();
-  const [loading, setLoading] = useState(true);
-
   const {
     control,
     handleSubmit,
@@ -68,26 +69,11 @@ const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
     },
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const industriesData = await getIndustries();
-        setIndustries(industriesData);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          showToast(
-            err.response?.data?.message || "An error occurred",
-            "danger"
-          );
-        } else {
-          showToast("An unexpected error occurred", "danger");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const {
+    data: industries,
+    isPending: isIndustries,
+    error: industriesError,
+  } = useIndustries();
 
   const handleFilePick = async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -97,7 +83,6 @@ const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
 
     // Check if the document picking was canceled
     if (result.canceled) {
-      console.log("Document picking was canceled");
       return;
     }
 
@@ -119,60 +104,37 @@ const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
     onNextStep(data);
   };
 
-  if (loading) return <Loading />;
+  if (isIndustries) return <Loading />;
+  if (industriesError) return <Error errorMessage={industriesError.message} />;
 
   return (
-    <View style={styles.formContainer}>
-      <Controller
+    <View>
+      <CustomTextInput
         control={control}
         name="username"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Business Name"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.username}
+        placeholder="Business Name"
       />
 
-      <Controller
-        name="industry_type_id"
+      <CustomPickerField
         control={control}
-        render={({ field: { onChange, value } }) => (
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={value}
-              onValueChange={(itemValue) => onChange(itemValue)}
-              dropdownIconColor={Colors.light.primary}
-            >
-              {industries?.map((option) => (
-                <Picker.Item
-                  key={option.id}
-                  label={option.name_en}
-                  value={option.id}
-                />
-              ))}
-            </Picker>
-          </View>
-        )}
-      />
+        name="industry_type_id"
+        error={errors.industry_type_id}
+      >
+        {industries?.map((option) => (
+          <Picker.Item
+            key={option.id}
+            label={option.name_en}
+            value={option.id}
+          />
+        ))}
+      </CustomPickerField>
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="location"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={styles.input}
-            placeholderTextColor={Colors.light.icon}
-            placeholder="Business Location"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.location}
+        placeholder="Business Location"
       />
 
       {/* File upload */}
@@ -231,9 +193,10 @@ const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
           </View>
         )}
       />
-
-      <CustomButton title="Back" onPress={onPrevStep} />
-      <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
+      <View style={styles.buttonsContainer}>
+        <CustomButton title="Back" onPress={onPrevStep} />
+        <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
+      </View>
     </View>
   );
 };
@@ -241,7 +204,7 @@ const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
 export default CompanyFormStep;
 
 const styles = StyleSheet.create({
-  formContainer: {
+  buttonsContainer: {
     gap: 12,
   },
   input: {

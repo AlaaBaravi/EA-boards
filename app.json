@@ -19,7 +19,9 @@
     },
     "android": {
       "softwareKeyboardLayoutMode": "pan",
-      "permissions": ["INTERNET"],
+      "permissions": [
+        "INTERNET"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
@@ -48,6 +50,12 @@
         "projectId": "034d581d-da33-4507-827e-246af90cb073",
         "apiBaseUrl": "https://new.aeboards.net"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/034d581d-da33-4507-827e-246af90cb073"
     }
   }
 }

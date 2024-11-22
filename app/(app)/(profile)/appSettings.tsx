@@ -6,14 +6,9 @@ import AppSettingsForm from "@/components/profile/AppSettingsForm";
 
 const appSettings = () => {
   return (
-    <>
-      <CustomHeader>
-        <Text style={mainstyles.title1}>App Settings</Text>
-      </CustomHeader>
-      <View style={mainstyles.container}>
-        <AppSettingsForm />
-      </View>
-    </>
+    <View style={mainstyles.container}>
+      <AppSettingsForm />
+    </View>
   );
 };
 

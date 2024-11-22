@@ -1,23 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
-import React from "react";
-
-import CustomButton from "@/components/ui/CustomButton";
-import { Controller } from "react-hook-form";
-import { TextInput } from "react-native-paper";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { StyleSheet, View } from "react-native";
 import { SubmitHandler, useForm } from "react-hook-form";
-import Toast from "react-native-root-toast";
-import axios from "axios";
-import { Colors } from "@/constants/Colors";
 
-const formSchema = z.object({
-  title: z.string(),
-  email: z.string().email("Enter a valid email"),
-  text: z.string().max(100, { message: "The maximum characters is 100" }),
-});
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useSendFeedback } from "@/hooks/info/useSendFeedback";
+import { FeedbackFormInputs, sendFeedbackSchema } from "@/constants/Schemas";
 
-type FeedbackFormInputs = z.infer<typeof formSchema>;
+import CustomTextInput from "@/components/ui/CustomTextInput";
+import CustomButton from "@/components/ui/CustomButton";
 
 const FeedbackForm = () => {
   const {
@@ -31,93 +20,50 @@ const FeedbackForm = () => {
       title: "",
       text: "",
     },
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(sendFeedbackSchema),
   });
 
+  const onReset = () => {
+    reset();
+  };
+
+  const { mutate: sendFeedbackMutation, isPending } = useSendFeedback(onReset);
+
   const onSubmit: SubmitHandler<FeedbackFormInputs> = async (data) => {
-    try {
-      const response = await axios.post(
-        "https://new.aeboards.net/api/info/send_feedback",
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-      Toast.show("Thanks for your feedback.", {
-        duration: Toast.durations.LONG,
-        backgroundColor: "#198754",
-        opacity: 1,
-      });
-      reset({
-        title: "",
-        text: "",
-        email: "",
-      });
-    } catch (error) {
-      console.error("Error sending feedback:", error);
-    }
+    sendFeedbackMutation(data);
   };
 
   return (
-    <View>
-      <Controller
+    <View style={styles.form}>
+      <CustomTextInput
         control={control}
         name="email"
-        render={({ field: { value, onChange, onBlur } }) => (
-          <TextInput
-            mode="outlined"
-            label="Email"
-            value={value}
-            onChangeText={onChange}
-            onBlur={onBlur}
-          />
-        )}
+        error={errors.email}
+        placeholder="Email"
       />
-      {errors.email?.message && typeof errors.email.message === "string" && (
-        <Text style={styles.error}>{errors.email.message}</Text>
-      )}
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="title"
-        render={({ field: { value, onChange, onBlur } }) => (
-          <TextInput
-            mode="outlined"
-            label="Title"
-            value={value}
-            onChangeText={onChange}
-            onBlur={onBlur}
-          />
-        )}
+        error={errors.title}
+        placeholder="Title"
       />
-      {errors.title?.message && typeof errors.title.message === "string" && (
-        <Text style={styles.error}>{errors.title.message}</Text>
-      )}
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="text"
-        render={({ field: { value, onChange, onBlur } }) => (
-          <TextInput
-            mode="outlined"
-            label="Your feedback"
-            value={value}
-            onChangeText={onChange}
-            onBlur={onBlur}
-            multiline={true}
-            numberOfLines={5}
-          />
-        )}
+        error={errors.text}
+        placeholder="Your feedback"
+        multiline={true}
+        numberOfLines={5}
       />
-      {errors.text?.message && typeof errors.text.message === "string" && (
-        <Text style={styles.error}>{errors.text.message}</Text>
-      )}
 
       <View style={{ marginTop: 12 }}>
-        <CustomButton title="Send" onPress={handleSubmit(onSubmit)} />
+        <CustomButton
+          title={isPending ? "Sending..." : "Send"}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isPending}
+        />
       </View>
     </View>
   );
@@ -126,8 +72,7 @@ const FeedbackForm = () => {
 export default FeedbackForm;
 
 const styles = StyleSheet.create({
-  error: {
-    color: Colors.light.danger,
-    marginBottom: 10,
+  form: {
+    padding: 20,
   },
 });

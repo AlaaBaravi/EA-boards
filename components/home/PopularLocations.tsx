@@ -1,38 +1,17 @@
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+
 import { mainstyles } from "@/constants/Styles";
-import { getRegions } from "@/util/https";
-import { Region } from "@/constants/Types";
-import LocationCard from "../ui/LocationCard";
-import { Colors } from "@/constants/Colors";
+import { useRegions } from "@/hooks/info/useRegions";
+
+import LocationCard from "@/components/ui/LocationCard";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
 
 const PopularLocations = () => {
-  const [regions, setRegions] = useState<Region[]>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { data: regions, isPending, error } = useRegions();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const regionsData = await getRegions();
-        setRegions(regionsData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (isLoading)
-    return <ActivityIndicator color={Colors.light.primary} size="large" />;
+  if (isPending) return <Loading />;
+  if (error) return <Error errorMessage={error.message} />;
 
   return (
     <View style={{ gap: 16 }}>

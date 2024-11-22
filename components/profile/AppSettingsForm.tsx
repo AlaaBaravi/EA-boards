@@ -1,6 +1,7 @@
 import { Button, StyleSheet, Switch, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
+
 import { Colors } from "@/constants/Colors";
 import CountryFlag from "react-native-country-flag";
 import { mainstyles } from "@/constants/Styles";

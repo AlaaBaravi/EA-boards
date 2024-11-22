@@ -1,12 +1,9 @@
-import { useAuth } from "@/store/authContext";
 import { showToast } from "@/util/fn";
-import { confirmToken, resetPassword } from "@/util/https";
+import { resetPassword } from "@/util/https";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 
 export const useResetPassword = () => {
-  const { state } = useAuth();
-
   return useMutation({
     mutationFn: ({
       email,

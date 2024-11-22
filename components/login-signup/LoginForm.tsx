@@ -20,6 +20,7 @@ import { mainstyles } from "@/constants/Styles";
 import Toast from "react-native-root-toast";
 import useAuthActions from "@/store/authActions";
 import { showToast } from "@/util/fn";
+import CustomTextInput from "../ui/CustomTextInput";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -35,13 +36,8 @@ const loginSchema = z.object({
 type LoginFormInput = z.infer<typeof loginSchema>;
 
 const LoginForm = () => {
-  const [isPasswordVisable, setIsPasswordVisable] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const { login } = useAuthActions();
-
-  function handlePasswordVisable() {
-    setIsPasswordVisable((visable) => !visable);
-  }
 
   const {
     handleSubmit,
@@ -73,8 +69,6 @@ const LoginForm = () => {
       });
 
       await login(response.data.data.token, response.data.data);
-
-      console.log(response.data.data.token);
     } catch (error) {
       if (error instanceof AxiosError) {
         showToast(error.response?.data.message, "danger");
@@ -87,69 +81,24 @@ const LoginForm = () => {
 
   return (
     <View style={styles.container}>
-      <Controller
+      <CustomTextInput
         control={control}
         name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <View style={mainstyles.input}>
-            <TextInput
-              placeholder="Email"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-              keyboardType="email-address"
-            />
-          </View>
-        )}
+        label="email"
+        placeholder="Email"
+        error={errors.email}
+        keyboardType="email-address"
       />
-      {errors.email?.message && typeof errors.email.message === "string" && (
-        <Text style={styles.error}>{errors.email.message}</Text>
-      )}
 
-      <Controller
-        control={control}
+      <CustomTextInput
         name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <View
-            style={[
-              mainstyles.input,
-              styles.passwordInput,
-              {
-                borderColor:
-                  error === "Email and password not valid"
-                    ? Colors.light.danger
-                    : Colors.light.primary,
-              },
-            ]}
-          >
-            <TextInput
-              placeholder="Password"
-              secureTextEntry={!isPasswordVisable}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-              style={{
-                flex: 1,
-                color:
-                  error === "Email and password not valid"
-                    ? Colors.light.danger
-                    : "black",
-              }}
-            />
-            <Ionicons
-              name={isPasswordVisable ? "eye-off-outline" : "eye-outline"}
-              size={20}
-              color="black"
-              style={{ opacity: 0.64 }}
-              onPress={handlePasswordVisable}
-            />
-          </View>
-        )}
+        control={control}
+        label="Password"
+        placeholder="password"
+        error={errors.password}
+        secureTextEntry={true}
+        icon="eye"
       />
-      {errors.password?.message &&
-        typeof errors.password.message === "string" && (
-          <Text style={styles.error}>{errors.password.message}</Text>
-        )}
 
       <Link href="/auth/forgotPassword" asChild>
         <Pressable

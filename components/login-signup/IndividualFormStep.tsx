@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import React, { FC, useState } from "react";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
@@ -6,6 +6,7 @@ import { Colors } from "@/constants/Colors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons } from "@expo/vector-icons";
 import CustomButton from "../ui/CustomButton";
+import CustomTextInput from "../ui/CustomTextInput";
 
 const individualStepSchema = z.object({
   username: z.string().optional(),
@@ -34,8 +35,6 @@ interface Props {
 }
 
 const IndividualFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
-  const [isPasswordVisable, setIsPasswordVisable] = useState<boolean>(false);
-
   const {
     control,
     handleSubmit,
@@ -47,124 +46,66 @@ const IndividualFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
     },
   });
 
-  function handlePasswordVisable() {
-    setIsPasswordVisable((visable) => !visable);
-  }
-
   const onSubmit = (data: IndividualFormStepData) => {
     onNextStep(data);
   };
 
   return (
-    <View style={styles.formContainer}>
-      <Controller
+    <View>
+      <CustomTextInput
         control={control}
         name="username"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Business Name"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.username}
+        placeholder="Username"
+        label="Username"
       />
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="location"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={styles.input}
-            placeholderTextColor={Colors.light.icon}
-            placeholder="Business Location"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.location}
+        placeholder="location"
+        label="Location"
       />
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="name"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Name"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.name}
+        placeholder="name"
+        label="Name"
       />
-      {errors.name && <Text style={styles.error}>{errors.name.message}</Text>}
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Email"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.email}
+        placeholder="email"
+        label="Email"
       />
-      {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="phone"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Phone Number"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.phone}
+        placeholder="phone Number"
+        keyboardType="phone-pad"
+        label="Phone Number"
       />
-      {errors.phone && <Text style={styles.error}>{errors.phone.message}</Text>}
 
-      <Controller
-        control={control}
+      <CustomTextInput
         name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <View style={[styles.input, styles.passwordInput]}>
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor={Colors.light.icon}
-              secureTextEntry={!isPasswordVisable}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-            <Ionicons
-              name={isPasswordVisable ? "eye-off-outline" : "eye-outline"}
-              size={20}
-              color="black"
-              style={{ opacity: 0.64 }}
-              onPress={handlePasswordVisable}
-            />
-          </View>
-        )}
+        control={control}
+        placeholder="password"
+        error={errors.password}
+        secureTextEntry={true}
+        icon="eye"
+        label="Password"
       />
-      {errors.password?.message &&
-        typeof errors.password.message === "string" && (
-          <Text style={styles.error}>{errors.password.message}</Text>
-        )}
-
-      <CustomButton title="Back" onPress={onPrevStep} />
-      <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
+      <View style={styles.buttonsContainer}>
+        <CustomButton title="Back" onPress={onPrevStep} />
+        <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
+      </View>
     </View>
   );
 };
@@ -172,7 +113,7 @@ const IndividualFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
 export default IndividualFormStep;
 
 const styles = StyleSheet.create({
-  formContainer: {
+  buttonsContainer: {
     gap: 12,
   },
   input: {

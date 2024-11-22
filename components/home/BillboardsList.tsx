@@ -1,45 +1,36 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import React from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Link, router } from "expo-router";
 
 import { mainstyles } from "@/constants/Styles";
 import { Colors } from "@/constants/Colors";
-import { router } from "expo-router";
-import { useAuth } from "@/store/authContext";
+import { useBillboards } from "@/hooks/info/useBillboards";
+import { useUserProfile } from "@/hooks/user/useUserProfile";
 import BillboardCard from "../billboards/BillboardCard";
 import Loading from "../ui/Loading";
-import { useBillboards } from "@/hooks/billboards/useBillboards";
 import Error from "../ui/Error";
-import { useUserProfile } from "@/hooks/useUserProfile";
 
 const Billboards = () => {
+  const {
+    data: userData,
+    isPending: isUserData,
+    error: userDataError,
+  } = useUserProfile();
+
   const {
     data: billboards,
     isPending: isBillboards,
     error: billboardsError,
-  } = useBillboards();
+  } = useBillboards({ company_id: userData ? [userData.id.toString()] : [] });
 
-  const {
-    data: userData,
-    isPending: isUserData,
-    error: userError,
-  } = useUserProfile();
+  const isPending = isUserData || isBillboards;
+  const error = userDataError || billboardsError;
 
-  const isPending = isBillboards || isUserData;
-  const error = billboardsError || userError;
+  if (isPending) return <Loading />;
+  if (error) return <Error errorMessage={error.message} />;
 
-  if (isPending) {
-    return <Loading />;
-  }
-  if (error) {
-    return <Error errorMessage={error.message} />;
-  }
-
-  const companyBillboards = billboards.filter(
-    (billboard) => billboard.company.id === userData.id
-  );
-
-  const billboardsSlice = companyBillboards?.slice(-3);
+  const billboardsSlice = billboards?.slice(-3);
 
   return (
     <View style={styles.container}>
@@ -47,7 +38,7 @@ const Billboards = () => {
         <Text style={mainstyles.title1}>My billboards</Text>
         <Pressable
           android_ripple={{ color: Colors.light.primary }}
-          onPress={() => router.push("/(app)/(tabs)/billboards")}
+          onPress={() => router.replace("/(app)/(tabs)/billboards")}
         >
           <Text style={styles.seeAll}>See all</Text>
         </Pressable>
@@ -69,7 +60,7 @@ const Billboards = () => {
       <Pressable
         android_ripple={{ color: "#28fd6c" }}
         style={styles.addContainer}
-        onPress={() => router.push("/(app)/(tabs)/billboards/addBillboards")}
+        onPress={() => router.push("/(app)/(billboards)/add-billboard")}
       >
         <Ionicons
           name="add-circle-outline"

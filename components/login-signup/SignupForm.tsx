@@ -1,40 +1,34 @@
-import React, { useContext, useEffect, useState } from "react";
-import { View, Text, Alert, StyleSheet, ScrollView } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { router, useRouter } from "expo-router";
-import axios, { AxiosError } from "axios";
-import { useAuth } from "@/store/authContext";
-import { Colors } from "@/constants/Colors";
+import React, { useContext, useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
+
 import CustomButton from "../ui/CustomButton";
-import { mainstyles } from "@/constants/Styles";
-import { FormValues, signupFormSchema } from "@/constants/Schemas";
-import { FormContext, FormProvider } from "@/store/signupContext";
+import CompanyFormStepTwo from "./CompanyFormStepTwo";
 import CompanyFormStep from "./CompanyFormStep";
 import IndividualFormStep from "./IndividualFormStep";
-import CompanyFormStepTwo from "./CompanyFormStepTwo";
-import Toast from "react-native-root-toast";
-import { showToast } from "@/util/fn";
+
+import { FormContext } from "@/store/signupContext";
+import { FormValues } from "@/constants/Schemas";
+import { mainstyles } from "@/constants/Styles";
+import { useSignup } from "@/hooks/auth/useSignup";
 
 export default function Signup() {
-  const { dispatch } = useAuth();
   const [step, setStep] = useState(0);
   const { accountType, setAccountType, formData, setFormData } =
     useContext(FormContext);
 
+  console.log(step);
+  console.log(formData.type);
+
   const handleNextStep = (data: Partial<typeof formData>) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-    if (step === 1 && formData.type === "company") {
+    const updatedData = { ...formData, ...data };
+    setFormData(updatedData);
+
+    if (step === 1 && updatedData.type === "company") {
       setStep((prevStep) => prevStep + 1);
-    }
-
-    if (step === 1 && formData.type === "individual") {
-      onSubmit(formData);
-    }
-
-    if (step === 2) {
-      onSubmit(formData);
+    } else if (step === 1 && updatedData.type === "individual") {
+      onSubmit(updatedData); // Pass updated data directly
+    } else if (step === 2) {
+      onSubmit(updatedData); // Pass updated data directly
     }
   };
 
@@ -48,93 +42,16 @@ export default function Signup() {
     setStep(1);
   };
 
-  const onSubmit = async (data: FormValues) => {
-    console.log(data);
-    try {
-      const formData = new FormData();
-      formData.append("type", data.type);
-      formData.append("name", data.name);
-      formData.append("email", data.email);
-      formData.append("phone", data.phone);
-      formData.append("password", data.password);
-      if (data.username !== undefined) {
-        formData.append("user_name", data.username);
-      }
-      if (data.industry_type_id !== undefined) {
-        formData.append("industry_type_id", data.industry_type_id.toString());
-      }
-      if (data.location !== undefined) {
-        formData.append("location", data.location);
-      }
-      if (data.business_size !== undefined) {
-        formData.append("business_size", data.business_size);
-      }
-      if (data.image) {
-        const response = await fetch(data.image);
-        const blob = await response.blob();
-        formData.append("image", {
-          uri: data.image,
-          name: `photo.${blob.type.split("/")[1]}`,
-          type: blob.type,
-        } as any);
-      }
-      if (data.files) {
-        data.files.forEach((file, index) => {
-          formData.append(`files[${index}]`, {
-            uri: file.uri,
-            name: file.name,
-            type: file.type,
-          } as any);
-        });
-      }
+  const { mutate: signupMutation, isPending: isSigningUp } = useSignup();
 
-      const response = await axios.post(
-        "https://new.aeboards.net/api/auth/register",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Accept: "application/json",
-          },
-        }
-      );
-      dispatch({
-        type: "LOGIN",
-        payload: {
-          token: response.data.data.token,
-          user: {
-            email: response.data.data.email,
-            accountType: response.data.data.type,
-          },
-        },
-      });
-      router.push({
-        pathname: "/auth/verify-email",
-      });
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response) {
-          const apiErrorMessage = error.response.data?.message;
-          console.log(apiErrorMessage);
-          if (apiErrorMessage === "User already exist") {
-            showToast("This user already exists. Please log in..", "danger");
-          } else {
-            showToast(
-              apiErrorMessage || "Registration failed. Please try again.",
-              "danger"
-            );
-          }
-        }
-      } else {
-        showToast("An unexpected error occurred. Please try again.", "danger");
-      }
-    }
+  const onSubmit = (data: typeof formData) => {
+    console.log(data);
+    signupMutation(data);
   };
 
   return (
     <View style={styles.container}>
       {step === 0 ? (
-        // Account Type Selection Screen (Step 0)
         <View style={styles.buttonContainer}>
           <Text style={[mainstyles.title2, { textAlign: "center" }]}>
             Select Account Type
@@ -149,7 +66,6 @@ export default function Signup() {
           />
         </View>
       ) : accountType === "company" ? (
-        // Render Company Form Steps
         step === 1 ? (
           <CompanyFormStep
             onNextStep={handleNextStep}
@@ -162,7 +78,6 @@ export default function Signup() {
           />
         )
       ) : (
-        // Render Individual Form Steps
         <IndividualFormStep
           onNextStep={handleNextStep}
           onPrevStep={handlePrevStep}

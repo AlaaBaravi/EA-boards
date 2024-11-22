@@ -9,6 +9,7 @@ export function useUserProfile() {
   return useQuery<UserProfile, Error>({
     queryKey: ["userData", state.token],
     queryFn: () => getProfile(state.token!),
+    staleTime: 0,
 
     enabled: !!state.token,
   });

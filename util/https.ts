@@ -1,21 +1,84 @@
-import { BillboardFormData, ProfileFormData } from "@/constants/Schemas";
-import { Billboard, GetBillboardsParams, UserProfile } from "@/constants/Types";
-import axios, { isAxiosError } from "axios";
-import { Alert } from "react-native";
+import {
+  BillboardFormData,
+  EditBillboardFormData,
+  FeedbackFormInputs,
+  FormValues,
+  ProfileFormData,
+} from "@/constants/Schemas";
+import {
+  Billboard,
+  FavoriteData,
+  GetBillboardsParams,
+  UserProfile,
+} from "@/constants/Types";
+import axios from "axios";
+import { formatTime } from "./fn";
 
 export const BASE_URL = "https://new.aeboards.net/api";
 const api = axios.create({
   baseURL: BASE_URL,
 });
 
-// Authentication
-export async function confirmToken({
+// ----------AUTHENTICATION----------
+export const signup = async (data: FormValues) => {
+  const formData = new FormData();
+  formData.append("type", data.type);
+  formData.append("name", data.name);
+  formData.append("email", data.email);
+  formData.append("phone", data.phone);
+  formData.append("password", data.password);
+  if (data.username !== undefined) {
+    formData.append("username", data.username);
+  }
+  if (data.industry_type_id !== undefined) {
+    formData.append("industry_type_id", data.industry_type_id.toString());
+  }
+  if (data.location !== undefined) {
+    formData.append("location", data.location);
+  }
+  if (data.business_size !== undefined) {
+    formData.append("business_size", data.business_size);
+  }
+  if (data.image) {
+    const response = await fetch(data.image);
+    const blob = await response.blob();
+    formData.append("image", {
+      uri: data.image,
+      name: `photo.${blob.type.split("/")[1]}`,
+      type: blob.type,
+    } as any);
+  }
+  if (data.files) {
+    data.files.forEach((file, index) => {
+      formData.append(`files[${index}]`, {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as any);
+    });
+  }
+
+  const response = await axios.post(
+    "https://new.aeboards.net/api/auth/register",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Accept: "application/json",
+      },
+    }
+  );
+
+  return response.data.data;
+};
+
+export const confirmToken = async ({
   email,
   token,
 }: {
   email: string;
   token: string;
-}) {
+}) => {
   const data = { email, token };
 
   const response = await api.post("/auth/confirm_token", data, {
@@ -24,9 +87,9 @@ export async function confirmToken({
       Accept: "application/json",
     },
   });
-}
+};
 
-export async function resetPassword({
+export const resetPassword = async ({
   email,
   token,
   new_password,
@@ -34,57 +97,18 @@ export async function resetPassword({
   email: string;
   token: string;
   new_password: string;
-}) {
+}) => {
   const data = { email, token, new_password };
   const response = await api.post("/auth/reset_password", data, {
     headers: { "Content-Type": "application/json", Accept: "application/json" },
   });
-}
-
-export async function getProfile(token: string): Promise<UserProfile> {
-  const response = await api.get("/user/get_profile", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
-  return response.data.data;
-}
-
-export const getBillboards = async (
-  params: GetBillboardsParams = {}
-): Promise<Billboard[]> => {
-  const defaultParams: GetBillboardsParams = {
-    region_id: "",
-    billboard_type_id: "",
-    company_id: "",
-    kind: "",
-    start_time: "",
-    end_time: "",
-    page: 1,
-    length: 10,
-  };
-
-  const mergedParams = { ...defaultParams, ...params };
-
-  const response = await api.post<{ data: { data: Billboard[] } }>(
-    `/info/get_billboards`,
-    mergedParams
-  );
-  return response.data.data.data;
 };
 
-export const getIndustries = async () => {
-  const response = await api.get("/info/get_industries", {
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
-  return response.data.data;
+export const resendTokenEmail = async (email: string) => {
+  const response = await api.post("/auth/resend_verify_email", { email });
 };
 
+// ----------BILLBOARD----------
 export const getBillboardById = async (id: string, token: string) => {
   const data = { billboard_id: id };
 
@@ -115,21 +139,41 @@ export const addBillboard = async (data: BillboardFormData, token: string) => {
   formData.append("region_id", data.region_id.toString());
   formData.append("billboard_type_id", data.billboard_type_id.toString());
   formData.append("location", data.location);
+  formData.append(
+    "description",
+    JSON.stringify({
+      height: data.height_description || null,
+      width: data.width_description || null,
+      location: data.location_description || null,
+      from: data.reach_from_description || null,
+      to: data.reach_to_description || null,
+      billboard: data.billboard_description || null,
+    })
+  );
 
   if (data.name) formData.append("name", data.name);
+
   if (data.price_on_regular)
     formData.append("price_on_regular", data.price_on_regular.toString());
+
   if (data.price_on_crowded)
     formData.append("price_on_crowded", data.price_on_crowded.toString());
+
+  if (data.video_length)
+    formData.append("video_length", data.video_length.toString());
+
+  if (data.video_repetition)
+    formData.append("video_repetition", data.video_repetition.toString());
+
   if (data.start_date_crowded)
-    formData.append(
-      "start_date_crowded",
-      data.start_date_crowded.toISOString()
-    );
+    formData.append("start_date_crowded", formatTime(data.start_date_crowded));
+
   if (data.end_date_crowded)
-    formData.append("end_date_crowded", data.end_date_crowded.toISOString());
+    formData.append("end_date_crowded", formatTime(data.end_date_crowded));
+
   if (data.number_booking_day)
     formData.append("number_booking_day", data.number_booking_day.toString());
+
   if (data.reviews) formData.append("reviews", data.reviews);
 
   if (data.files) {
@@ -173,6 +217,111 @@ export const deleteBillboardById = async (id: string, token: string) => {
   );
 };
 
+export const editBillboard = async (
+  data: EditBillboardFormData,
+  token: string
+) => {
+  const formData = new FormData();
+  formData.append("billboard_id", data.billboard_id.toString());
+  formData.append("title", data.title);
+  formData.append("name", data.name);
+
+  if (data.kind) {
+    formData.append("kind", data.kind);
+  }
+  if (data.region_id) {
+    formData.append("region_id", data.region_id.toString());
+  }
+  if (data.billboard_type_id) {
+    formData.append("billboard_type_id", data.billboard_type_id.toString());
+  }
+  if (data.location) {
+    formData.append("location", data.location);
+  }
+  formData.append(
+    "description",
+    JSON.stringify({
+      height: data.height_description || null,
+      width: data.width_description || null,
+      location: data.location_description || null,
+      from: data.reach_from_description || null,
+      to: data.reach_to_description || null,
+      billboard: data.billboard_description || null,
+    })
+  );
+
+  if (data.price_on_day)
+    formData.append("price_on_day", data.price_on_day.toString());
+
+  if (data.video_length)
+    formData.append("video_length", data.video_length.toString());
+
+  if (data.video_repetition)
+    formData.append("video_repetition", data.video_repetition.toString());
+
+  if (data.number_booking_day)
+    formData.append("number_booking_day", data.number_booking_day.toString());
+
+  if (data.reviews) formData.append("reviews", data.reviews.toString());
+
+  const response = await api.post("/billboard/edit", formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+};
+
+// ----------INFO----------
+export const getBillboards = async (
+  params: GetBillboardsParams = {}
+): Promise<Billboard[]> => {
+  const defaultParams: GetBillboardsParams = {
+    region_id: [],
+    billboard_type_id: [],
+    company_id: [],
+    kind: "",
+    start_time: "",
+    end_time: "",
+    // page: 1,
+    // length: 10,
+  };
+
+  const mergedParams = { ...defaultParams, ...params };
+
+  const formattedParams = Object.entries(mergedParams).reduce(
+    (acc, [key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((val, index) => {
+          acc.append(`${key}[${index}]`, val);
+        });
+      } else if (value !== undefined && value !== "") {
+        acc.append(key, value.toString());
+      }
+      return acc;
+    },
+    new URLSearchParams()
+  );
+
+  const queryString = formattedParams.toString();
+
+  const response = await api.get<{ data: { data: Billboard[] } }>(
+    `/info/get_billboards?${queryString}`
+  );
+  return response.data.data.data;
+};
+
+export const getIndustries = async () => {
+  const response = await api.get("/info/get_industries", {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+  return response.data.data;
+};
+
 export const getCompanies = async () => {
   try {
     const response = await api.get("/info/get_companies", {
@@ -186,6 +335,27 @@ export const getCompanies = async () => {
     console.error("Error fetching companies:", error);
     throw error;
   }
+};
+
+export const getBillboardTypes = async () => {
+  const response = await api.get("/info/get_billboard_types", {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+
+  return response.data.data;
+};
+
+export const getRegions = async () => {
+  const response = await api.get("/info/get_regions", {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+  return response.data.data;
 };
 
 export const getInfo = async () => {
@@ -203,24 +373,24 @@ export const getInfo = async () => {
   }
 };
 
-export const resendTokenEmail = async (email: string) => {
-  const response = await api.post("/auth/resend_verify_email", { email });
+export const sendFeedback = async (data: FeedbackFormInputs) => {
+  const response = await axios.post(
+    "https://new.aeboards.net/api/info/send_feedback",
+    data,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
 };
 
-export const getBillboardTypes = async () => {
-  const response = await api.get("/info/get_billboard_types", {
+// ----------USER----------
+export const getProfile = async (token: string): Promise<UserProfile> => {
+  const response = await api.get("/user/get_profile", {
     headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
-
-  return response.data.data;
-};
-
-export const getRegions = async () => {
-  const response = await api.get("/info/get_regions", {
-    headers: {
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -265,7 +435,6 @@ export const updateUserProfile = async (
     } as any);
   }
 
-  console.log(formData);
   const response = await api.post("/user/update", formData, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -274,4 +443,17 @@ export const updateUserProfile = async (
     },
   });
   return response.data;
+};
+
+export const updateFavorite = async (
+  favoriteData: FavoriteData,
+  token: string
+) => {
+  const response = await api.post("/user/update_favorite", favoriteData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
 };

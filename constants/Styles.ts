@@ -18,6 +18,11 @@ export const mainstyles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
+  title3: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 14,
+    lineHeight: 24,
+  },
   caption: {
     fontFamily: "Poppins_400Regular",
     fontSize: 12,
@@ -30,7 +35,7 @@ export const mainstyles = StyleSheet.create({
   },
   input: {
     borderColor: Colors.light.primary,
-    borderBottomWidth: 1,
+    borderWidth: 1,
     marginBottom: 10,
     borderRadius: 5,
   },
@@ -40,4 +45,11 @@ export const mainstyles = StyleSheet.create({
     width: "100%",
   },
   logo: { width: 192, height: 103 },
+  error: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 12,
+    lineHeight: 18,
+    color: Colors.light.danger,
+    marginTop: 5,
+  },
 });

@@ -1,5 +1,5 @@
 import React, { FC, useContext, useState } from "react";
-import { View, TextInput, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { mainstyles } from "@/constants/Styles";
 
 import { Colors } from "@/constants/Colors";
 import { Image } from "react-native";
+import CustomTextInput from "../ui/CustomTextInput";
 const companyStepSchemaTwo = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
@@ -48,7 +49,6 @@ interface Props {
 
 const CompanyFormStepTwo: FC<Props> = ({ onNextStep, onPrevStep }) => {
   const { formData } = useContext(FormContext);
-  const [isPasswordVisable, setIsPasswordVisable] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const {
@@ -62,10 +62,6 @@ const CompanyFormStepTwo: FC<Props> = ({ onNextStep, onPrevStep }) => {
     defaultValues: { image: undefined },
   });
 
-  function handlePasswordVisable() {
-    setIsPasswordVisable((visable) => !visable);
-  }
-
   const handleFilePick = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: "*/*", // Adjust the file type as needed
@@ -74,7 +70,6 @@ const CompanyFormStepTwo: FC<Props> = ({ onNextStep, onPrevStep }) => {
 
     // Check if the document picking was canceled
     if (result.canceled) {
-      console.log("Document picking was canceled");
       return;
     }
 
@@ -123,82 +118,39 @@ const CompanyFormStepTwo: FC<Props> = ({ onNextStep, onPrevStep }) => {
   };
 
   return (
-    <View style={styles.formContainer}>
-      <Controller
+    <View>
+      <CustomTextInput
         control={control}
         name="name"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Name"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.name}
+        placeholder="name"
       />
-      {errors.name && <Text style={styles.error}>{errors.name.message}</Text>}
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Email"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.email}
+        placeholder="email"
+        keyboardType="email-address"
       />
-      {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
-      <Controller
+      <CustomTextInput
         control={control}
         name="phone"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Phone Number"
-            placeholderTextColor={Colors.light.icon}
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
+        error={errors.phone}
+        placeholder="Phone Number"
+        keyboardType="phone-pad"
       />
-      {errors.phone && <Text style={styles.error}>{errors.phone.message}</Text>}
 
-      <Controller
-        control={control}
+      <CustomTextInput
         name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <View style={[styles.input, styles.passwordInput]}>
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor={Colors.light.icon}
-              secureTextEntry={!isPasswordVisable}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-            <Ionicons
-              name={isPasswordVisable ? "eye-off-outline" : "eye-outline"}
-              size={20}
-              color="black"
-              style={{ opacity: 0.64 }}
-              onPress={handlePasswordVisable}
-            />
-          </View>
-        )}
+        control={control}
+        label="Password"
+        placeholder="password"
+        error={errors.password}
+        secureTextEntry={true}
+        icon="eye"
       />
-      {errors.password?.message &&
-        typeof errors.password.message === "string" && (
-          <Text style={styles.error}>{errors.password.message}</Text>
-        )}
 
       {/* File upload */}
       <Pressable onPress={handleFilePick} style={styles.pressable}>
@@ -273,9 +225,10 @@ const CompanyFormStepTwo: FC<Props> = ({ onNextStep, onPrevStep }) => {
           </View>
         )}
       />
-
-      <CustomButton title="Back" onPress={onPrevStep} />
-      <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
+      <View style={styles.buttonsContainer}>
+        <CustomButton title="Back" onPress={onPrevStep} />
+        <CustomButton title="Next" onPress={handleSubmit(onSubmit)} />
+      </View>
     </View>
   );
 };
@@ -283,7 +236,7 @@ const CompanyFormStepTwo: FC<Props> = ({ onNextStep, onPrevStep }) => {
 export default CompanyFormStepTwo;
 
 const styles = StyleSheet.create({
-  formContainer: {
+  buttonsContainer: {
     gap: 12,
   },
   input: {
@@ -305,5 +258,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginVertical: 10,
   },
 });

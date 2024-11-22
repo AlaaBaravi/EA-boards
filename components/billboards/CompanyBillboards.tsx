@@ -2,10 +2,13 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import React, { useState } from "react";
 import { mainstyles } from "@/constants/Styles";
 import BillboardCard from "./BillboardCard";
-import { useBillboards } from "@/hooks/billboards/useBillboards";
+import { useBillboards } from "@/hooks/info/useBillboards";
 import Loading from "../ui/Loading";
 import Error from "../ui/Error";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserProfile } from "@/hooks/user/useUserProfile";
+import { useAuth } from "@/store/authContext";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const CompanyBillboards = () => {
   const [pressed, setPressed] = useState<string>("available");
@@ -16,22 +19,17 @@ const CompanyBillboards = () => {
     error: userError,
   } = useUserProfile();
 
+  if (isUserData) return <Loading />;
+  if (userError) return <Error errorMessage={userError?.message} />;
+
   const {
     data: billboards,
     isPending: isBillboards,
     error: billboardsError,
-  } = useBillboards();
+  } = useBillboards({ company_id: [userData.id.toString()] });
 
-  const isPending = isBillboards || isUserData;
-  const error = billboardsError || userError;
-
-  if (isPending) return <Loading />;
-
-  if (error) return <Error errorMessage={error?.message} />;
-
-  const companyBillboards = billboards.filter(
-    (billboard) => billboard.company.id === userData.id
-  );
+  if (isBillboards) return <Loading />;
+  if (billboardsError) return <Error errorMessage={billboardsError?.message} />;
 
   return (
     <>
@@ -50,6 +48,7 @@ const CompanyBillboards = () => {
             Reserved
           </Text>
         </Pressable>
+
         <Pressable onPress={() => setPressed("available")}>
           <Text
             style={[
@@ -65,11 +64,12 @@ const CompanyBillboards = () => {
           </Text>
         </Pressable>
       </View>
+
       {pressed === "available" ? (
         billboards.length > 0 ? (
           <FlatList
             style={styles.billboardContainer}
-            data={companyBillboards}
+            data={billboards}
             renderItem={({ item }) => <BillboardCard billboard={item} />}
             keyExtractor={(item) => item.id.toString()}
           />
@@ -78,6 +78,16 @@ const CompanyBillboards = () => {
         )
       ) : (
         <Text style={styles.text}>You have no reserved billboards yet</Text>
+      )}
+
+      {userData.verify_admin === "1" && (
+        <Ionicons
+          name="add-circle"
+          size={56}
+          color="black"
+          style={{ position: "absolute", bottom: 20, right: 20 }}
+          onPress={() => router.push("/(app)/(billboards)/add-billboard")}
+        />
       )}
     </>
   );

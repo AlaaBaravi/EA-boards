@@ -4,6 +4,8 @@ import { Feather, FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import Constants from "expo-constants";
 import { Billboard } from "@/constants/Types";
+import { mainstyles } from "@/constants/Styles";
+import { Colors } from "@/constants/Colors";
 
 const baseURL =
   Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
@@ -18,12 +20,13 @@ const BillboardImage = ({ billboard }: { billboard: Billboard }) => {
       imageStyle={styles.imageStyle}
     >
       <View style={styles.overlay}>
-        <Feather
-          name="chevron-left"
-          size={32}
-          color="white"
-          onPress={() => router.back()}
-        />
+        {billboard.files.length === 0 && (
+          <Text
+            style={[mainstyles.caption, { color: Colors.light.background }]}
+          >
+            This billboard has no images
+          </Text>
+        )}
 
         <View style={styles.reviews}>
           <FontAwesome name="star" size={14} color="#E2CC00" />
@@ -57,6 +60,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(44, 38, 38, 0.48)",
     padding: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
   reviews: {
     position: "absolute",
