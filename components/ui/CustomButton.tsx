@@ -3,6 +3,8 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  ViewStyle,
+  TextStyle,
 } from "react-native";
 import React, { FC } from "react";
 import { Colors } from "@/constants/Colors";
@@ -14,6 +16,8 @@ interface PrimaryButtonProps {
   disabled?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
   onPress: (event: GestureResponderEvent) => void;
+  style?: ViewStyle; // For the Pressable
+  textStyle?: TextStyle; // For the Text
 }
 
 const CustomButton: FC<PrimaryButtonProps> = ({
@@ -22,6 +26,8 @@ const CustomButton: FC<PrimaryButtonProps> = ({
   icon,
   disabled = false,
   variant = "primary",
+  style,
+  textStyle,
 }) => {
   return (
     <Pressable
@@ -29,14 +35,16 @@ const CustomButton: FC<PrimaryButtonProps> = ({
       style={[
         styles.button,
         variant === "secondary" ? styles.secondary : styles.primary,
+        style, // Merge custom styles
       ]}
       onPress={onPress}
       disabled={disabled}
     >
       <Text
-        style={
-          variant === "secondary" ? styles.textSecondary : styles.textPrimary
-        }
+        style={[
+          variant === "secondary" ? styles.textSecondary : styles.textPrimary,
+          textStyle, // Merge custom text styles
+        ]}
       >
         {title}
       </Text>
@@ -63,7 +71,6 @@ const styles = StyleSheet.create({
   secondary: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    textTransform: "capitalize",
   },
   textPrimary: {
     color: "#FFE2E2",

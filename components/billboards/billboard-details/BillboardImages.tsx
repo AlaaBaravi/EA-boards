@@ -38,6 +38,7 @@ const BillboardImages = ({ billboard }: { billboard: Billboard }) => {
             source={{ uri: `${baseURL}${files.at(index)?.path}` }}
             style={styles.image}
             imageStyle={styles.imageStyle}
+            key={file.id}
           >
             <View style={styles.overlay}></View>
           </ImageBackground>

@@ -3,15 +3,14 @@ import { router } from "expo-router";
 
 import { mainstyles } from "@/constants/Styles";
 import { useBillboards } from "@/hooks/info/useBillboards";
-
-import BillboardImages from "./BillboardImages";
-import BillboardInfo from "./BillboardInfo";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
 import BillboardImage from "./BillboardImage";
-import Location from "./billboard-details/Location";
-import Favorite from "./billboard-details/Favorite";
-import Error from "../ui/Error";
-import Loading from "../ui/Loading";
-import CustomButton from "../ui/CustomButton";
+import Location from "./Location";
+import Favorite from "./Favorite";
+import BillboardInfo from "./BillboardInfo";
+import BillboardImages from "./BillboardImages";
+import CustomButton from "@/components/ui/CustomButton";
 
 const CustomerBillboardDetails = ({ myId }: { myId: string }) => {
   const { data: billboards, isPending, error } = useBillboards();

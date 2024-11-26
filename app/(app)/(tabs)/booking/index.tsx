@@ -52,6 +52,6 @@ export default index;
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-around" },
-  active: { color: Colors.light.primary },
+  active: { fontWeight: "700", color: Colors.light.primary },
   notActive: { fontWeight: "700", textDecorationLine: "underline" },
 });

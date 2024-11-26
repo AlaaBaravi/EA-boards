@@ -2,18 +2,17 @@ import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Octicons } from "@expo/vector-icons";
 
-import BillboardImage from "./BillboardImage";
-import BillboardImages from "./BillboardImages";
-import BillboardInfo from "./BillboardInfo";
-import Loading from "../ui/Loading";
-import Error from "../ui/Error";
-
 import { mainstyles } from "@/constants/Styles";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/store/authContext";
 import { useDeleteBillboard } from "@/hooks/billboards/useDeleteBillboard";
 import { useBillboardById } from "@/hooks/billboards/useBillboardById";
-import Location from "./billboard-details/Location";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
+import BillboardImage from "./BillboardImage";
+import Location from "./Location";
+import BillboardInfo from "./BillboardInfo";
+import BillboardImages from "./BillboardImages";
 
 const CompanyBillboardDetails = ({ myId }: { myId: string }) => {
   const { state } = useAuth();
@@ -46,7 +45,7 @@ const CompanyBillboardDetails = ({ myId }: { myId: string }) => {
     );
   };
 
-  if (isBillboard) {
+  if (isBillboard || isDeleting) {
     return <Loading />;
   }
 
@@ -60,7 +59,7 @@ const CompanyBillboardDetails = ({ myId }: { myId: string }) => {
         <BillboardImage billboard={billboard} />
         <View style={styles.row}>
           <Location billboard={billboard} />
-          <View style={[styles.row, { gap: 16 }]}>
+          <View style={styles.row}>
             <Octicons
               name="trash"
               size={24}
@@ -96,6 +95,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 8,
+    gap: 16,
   },
 });

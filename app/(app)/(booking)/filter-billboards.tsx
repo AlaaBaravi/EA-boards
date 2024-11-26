@@ -1,21 +1,21 @@
-import { StyleSheet, Text, View } from "react-native";
-import React from "react";
-import { useCompanies } from "@/hooks/info/useCompanies";
-import { useBillboardTypes } from "@/hooks/info/useBillboardTypes";
-import { useRegions } from "@/hooks/info/useRegions";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
+import { StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { Picker } from "@react-native-picker/picker";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   FilterBillboardsFormData,
   filterBillboardsSchema,
 } from "@/constants/Schemas";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useCompanies } from "@/hooks/info/useCompanies";
+import { useBillboardTypes } from "@/hooks/info/useBillboardTypes";
+import { useRegions } from "@/hooks/info/useRegions";
+
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
 import CustomPickerField from "@/components/ui/CustomPickerField";
-import { mainstyles } from "@/constants/Styles";
 import CustomButton from "@/components/ui/CustomButton";
+import { router } from "expo-router";
 
 const FilterBillboards = () => {
   const {
@@ -28,6 +28,7 @@ const FilterBillboards = () => {
     isPending: isBillboardTypes,
     error: billboardTypesError,
   } = useBillboardTypes();
+
   const {
     data: regions,
     isPending: isRegions,
@@ -50,6 +51,10 @@ const FilterBillboards = () => {
 
   const onSubmit = (data: FilterBillboardsFormData) => {
     console.log(data);
+    router.push({
+      pathname: "/(app)/(booking)/filtered-billboards",
+      params: data,
+    });
   };
 
   return (

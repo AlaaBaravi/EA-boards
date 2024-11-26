@@ -19,9 +19,7 @@
     },
     "android": {
       "softwareKeyboardLayoutMode": "pan",
-      "permissions": [
-        "INTERNET"
-      ],
+      "permissions": ["INTERNET"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
@@ -48,7 +46,8 @@
     "extra": {
       "eas": {
         "projectId": "034d581d-da33-4507-827e-246af90cb073",
-        "apiBaseUrl": "https://new.aeboards.net"
+        "apiBaseUrl": "https://new.aeboards.net",
+        "googleMapsApiKey": "AIzaSyALBvB0SHMQXa0IGf_sI-2ewEzPlhwg2xk"
       }
     },
     "runtimeVersion": {

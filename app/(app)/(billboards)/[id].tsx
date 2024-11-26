@@ -1,11 +1,10 @@
 import React from "react";
-import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useUserProfile } from "@/hooks/user/useUserProfile";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
-import CompanyBillboardDetails from "@/components/billboards/CompanyBillboardDetails";
-import CustomerBillboardDetails from "@/components/billboards/CustomerBillboardDetails";
+import CompanyBillboardDetails from "@/components/billboards/billboard-details/CompanyBillboardDetails";
+import CustomerBillboardDetails from "@/components/billboards/billboard-details/CustomerBillboardDetails";
 
 const BillboardDetails = () => {
   const { id } = useLocalSearchParams();

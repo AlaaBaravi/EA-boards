@@ -112,23 +112,18 @@ export const resendTokenEmail = async (email: string) => {
 export const getBillboardById = async (id: string, token: string) => {
   const data = { billboard_id: id };
 
-  try {
-    const response = await api.post(
-      `/billboard/get_by_id?billboard_id=${id}`,
-      data,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching billboards:", error);
-    throw error;
-  }
+  const response = await api.post(
+    `/billboard/get_by_id?billboard_id=${id}`,
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
+  return response.data.data;
 };
 
 export const addBillboard = async (data: BillboardFormData, token: string) => {
@@ -323,18 +318,13 @@ export const getIndustries = async () => {
 };
 
 export const getCompanies = async () => {
-  try {
-    const response = await api.get("/info/get_companies", {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching companies:", error);
-    throw error;
-  }
+  const response = await api.get("/info/get_companies", {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+  return response.data.data;
 };
 
 export const getBillboardTypes = async () => {
@@ -359,18 +349,13 @@ export const getRegions = async () => {
 };
 
 export const getInfo = async () => {
-  try {
-    const response = await api.get("/info/get_info", {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching info:", error);
-    throw error;
-  }
+  const response = await api.get("/info/get_info", {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+  return response.data.data;
 };
 
 export const sendFeedback = async (data: FeedbackFormInputs) => {

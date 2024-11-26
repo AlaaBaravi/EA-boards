@@ -7,6 +7,7 @@ import FavoriteCard from "@/components/profile/FavoriteCard";
 import { mainstyles } from "@/constants/Styles";
 import CustomButton from "@/components/ui/CustomButton";
 import { router } from "expo-router";
+import Empty from "@/components/ui/Empty";
 
 const favorites = () => {
   const { data, isPending, error } = useUserProfile();
@@ -17,15 +18,12 @@ const favorites = () => {
   return (
     <>
       {data.favorites.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>
-            You don't have any favorites, Start adding some.
-          </Text>
+        <Empty text="You don't have any favorites, Start adding some.">
           <CustomButton
             title="Check billboards list"
             onPress={() => router.replace("/(app)/(tabs)/billboards")}
           />
-        </View>
+        </Empty>
       ) : (
         <FlatList
           style={mainstyles.container}
@@ -39,15 +37,3 @@ const favorites = () => {
 };
 
 export default favorites;
-
-const styles = StyleSheet.create({
-  empty: {
-    ...mainstyles.container,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    ...mainstyles.title2,
-    textAlign: "center",
-  },
-});

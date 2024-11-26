@@ -1,29 +1,14 @@
 import { StyleSheet, Text, View } from "react-native";
 import React from "react";
 import { mainstyles } from "@/constants/Styles";
+import Empty from "../ui/Empty";
 
 const PendingBillboards = () => {
   return (
     <>
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>
-          You don't hav any pending billboards!
-        </Text>
-      </View>
+      <Empty text="You don't hav any pending billboards!" />
     </>
   );
 };
 
 export default PendingBillboards;
-
-const styles = StyleSheet.create({
-  empty: {
-    ...mainstyles.container,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    ...mainstyles.title2,
-    textAlign: "center",
-  },
-});

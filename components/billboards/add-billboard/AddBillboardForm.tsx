@@ -26,11 +26,11 @@ import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 import CustomPickerField from "@/components/ui/CustomPickerField";
 import CustomTextInput from "@/components/ui/CustomTextInput";
-import CustomTimePicker from "../ui/CustomTimePicker";
+import CustomTimePicker from "@/components/ui/CustomTimePicker";
 
 const width = Dimensions.get("window").width;
 
-const AddBillboardForm = () => {
+const AddBillboardForm = ({ location }: { location: string }) => {
   const {
     data: billboardTypes,
     isPending: typesLoading,
@@ -55,7 +55,7 @@ const AddBillboardForm = () => {
     resolver: zodResolver(addBillboardSchema),
     defaultValues: {
       title: "",
-      location: "",
+      // location: "",
       kind: "paper",
       location_description: undefined,
       billboard_description: undefined,
@@ -119,7 +119,7 @@ const AddBillboardForm = () => {
     useAddBillboard(resetForm);
 
   const onSubmit = (data: BillboardFormData) => {
-    addBillboardMutation(data);
+    addBillboardMutation({ ...data, location });
   };
 
   const isPending = typesLoading || regionsLoading;
@@ -131,12 +131,12 @@ const AddBillboardForm = () => {
   return (
     <SafeAreaView>
       <ScrollView contentContainerStyle={styles.form}>
-        <CustomTextInput
+        {/* <CustomTextInput
           control={control}
           error={errors.location}
           name="location"
           label="Location:"
-        />
+        /> */}
 
         <CustomTextInput
           control={control}

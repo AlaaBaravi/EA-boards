@@ -52,4 +52,17 @@ export const mainstyles = StyleSheet.create({
     color: Colors.light.danger,
     marginTop: 5,
   },
+  empty: {
+    flex: 1,
+    padding: 24,
+    gap: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontFamily: "Poppins_400Regular",
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+  },
 });

@@ -1,13 +1,5 @@
-import React, { FC, useEffect, useState } from "react";
-import axios from "axios";
-import {
-  View,
-  TextInput,
-  Text,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
+import React, { FC } from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,17 +8,15 @@ import * as DocumentPicker from "expo-document-picker";
 
 import { Colors } from "@/constants/Colors";
 import CustomButton from "../ui/CustomButton";
-import { Industry } from "@/constants/Types";
-import { getIndustries } from "@/util/https";
 import BusinessSizeOption from "../ui/BusinessSizeOption";
 import { mainstyles } from "@/constants/Styles";
 import { Feather } from "@expo/vector-icons";
-import { showToast } from "@/util/fn";
 import Loading from "../ui/Loading";
 import CustomTextInput from "../ui/CustomTextInput";
 import { useIndustries } from "@/hooks/info/useIndustries";
 import Error from "../ui/Error";
 import CustomPickerField from "../ui/CustomPickerField";
+import GooglePlacesInput from "../ui/GooglePlacesInput";
 
 const companyStepSchema = z.object({
   username: z.string().optional(),
@@ -109,6 +99,12 @@ const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
 
   return (
     <View>
+      <GooglePlacesInput
+        control={control}
+        name="location"
+        error={errors.location}
+      />
+
       <CustomTextInput
         control={control}
         name="username"
@@ -130,12 +126,12 @@ const CompanyFormStep: FC<Props> = ({ onNextStep, onPrevStep }) => {
         ))}
       </CustomPickerField>
 
-      <CustomTextInput
+      {/* <CustomTextInput
         control={control}
         name="location"
         error={errors.location}
         placeholder="Business Location"
-      />
+      /> */}
 
       {/* File upload */}
       <Pressable onPress={handleFilePick} style={styles.pressable}>

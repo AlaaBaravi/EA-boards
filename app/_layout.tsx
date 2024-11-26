@@ -10,6 +10,7 @@ import {
 import { useEffect } from "react";
 import { AuthProvider } from "@/store/authContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "react-native-get-random-values";
 
 const queryClient = new QueryClient();
 

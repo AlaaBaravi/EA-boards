@@ -1,17 +1,22 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import React, { useState } from "react";
-import { mainstyles } from "@/constants/Styles";
-import BillboardCard from "./BillboardCard";
-import { useBillboards } from "@/hooks/info/useBillboards";
-import Loading from "../ui/Loading";
-import Error from "../ui/Error";
-import { useUserProfile } from "@/hooks/user/useUserProfile";
-import { useAuth } from "@/store/authContext";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+import { useBillboards } from "@/hooks/info/useBillboards";
+import { useUserProfile } from "@/hooks/user/useUserProfile";
+import { mainstyles } from "@/constants/Styles";
+import { Colors } from "@/constants/Colors";
+
+import BillboardCard from "./BillboardCard";
+import Loading from "../ui/Loading";
+import Error from "../ui/Error";
+
 const CompanyBillboards = () => {
-  const [pressed, setPressed] = useState<string>("available");
+  const [isAvailable, setIsAvailable] = useState(true);
+  const handlPress = (available: boolean) => {
+    available ? setIsAvailable(true) : setIsAvailable(false);
+  };
 
   const {
     data: userData,
@@ -33,39 +38,20 @@ const CompanyBillboards = () => {
 
   return (
     <>
-      <View style={styles.rowView}>
-        <Pressable onPress={() => setPressed("reserved")}>
-          <Text
-            style={[
-              mainstyles.title1,
-              {
-                color: pressed === "reserved" ? "black" : "#1A90408A",
-                textDecorationLine:
-                  pressed === "reserved" ? "underline" : "none",
-              },
-            ]}
-          >
+      <View style={styles.row}>
+        <Pressable onPress={() => handlPress(false)}>
+          <Text style={isAvailable ? styles.notActive : styles.active}>
             Reserved
           </Text>
         </Pressable>
-
-        <Pressable onPress={() => setPressed("available")}>
-          <Text
-            style={[
-              mainstyles.title1,
-              {
-                color: pressed === "available" ? "black" : "#1A90408A",
-                textDecorationLine:
-                  pressed === "available" ? "underline" : "none",
-              },
-            ]}
-          >
+        <Pressable onPress={() => handlPress(true)}>
+          <Text style={isAvailable ? styles.active : styles.notActive}>
             Available
           </Text>
         </Pressable>
       </View>
 
-      {pressed === "available" ? (
+      {isAvailable ? (
         billboards.length > 0 ? (
           <FlatList
             style={styles.billboardContainer}
@@ -85,7 +71,7 @@ const CompanyBillboards = () => {
           name="add-circle"
           size={56}
           color="black"
-          style={{ position: "absolute", bottom: 20, right: 20 }}
+          style={styles.add}
           onPress={() => router.push("/(app)/(billboards)/add-billboard")}
         />
       )}
@@ -96,15 +82,14 @@ const CompanyBillboards = () => {
 export default CompanyBillboards;
 
 const styles = StyleSheet.create({
-  rowView: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
+  row: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
   billboardContainer: {
     width: "100%",
   },
   text: {
     ...mainstyles.caption,
   },
+  active: { fontWeight: "700", color: Colors.light.primary },
+  notActive: { fontWeight: "700", textDecorationLine: "underline" },
+  add: { position: "absolute", bottom: 20, right: 20 },
 });

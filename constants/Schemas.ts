@@ -35,7 +35,7 @@ export type FormValues = z.infer<typeof signupFormSchema>;
 export const addBillboardSchema = z
   .object({
     title: z.string().min(1, { message: "Title is required" }),
-    location: z.string().min(1, { message: "Location is required" }),
+    location: z.string().optional(),
     region_id: z.number(),
     billboard_type_id: z.number(),
     kind: z.enum(["paper", "digital"]),
@@ -164,10 +164,10 @@ export const profileSchema = z.object({
 export type ProfileFormData = z.infer<typeof profileSchema>;
 
 export const filterBillboardsSchema = z.object({
-  company_id: z.coerce.number().optional(),
-  billboard_type_id: z.coerce.number().optional(),
-  region_id: z.coerce.number().optional(),
-  kind: z.string().optional(),
+  company_id: z.coerce.number({ message: "Company is required" }),
+  billboard_type_id: z.coerce.number({ message: "Billboard Type is required" }),
+  region_id: z.coerce.number({ message: "Location is required" }),
+  kind: z.string({ message: "Kind is required" }),
 });
 export type FilterBillboardsFormData = z.infer<typeof filterBillboardsSchema>;
 

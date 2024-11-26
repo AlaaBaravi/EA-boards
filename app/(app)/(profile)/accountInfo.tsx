@@ -11,10 +11,10 @@ import * as ImagePicker from "expo-image-picker";
 import { useForm, Controller } from "react-hook-form";
 import { Picker } from "@react-native-picker/picker";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Constants from "expo-constants";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 
+import Constants from "expo-constants";
 import { mainstyles } from "@/constants/Styles";
 import { ProfileFormData, profileSchema } from "@/constants/Schemas";
 import { Colors } from "@/constants/Colors";
@@ -29,6 +29,7 @@ import { useUpdateUser } from "@/hooks/user/useUpdateUser";
 import { useIndustries } from "@/hooks/info/useIndustries";
 import CustomTextInput from "@/components/ui/CustomTextInput";
 import CustomPickerField from "@/components/ui/CustomPickerField";
+import GooglePlacesInput from "@/components/ui/GooglePlacesInput";
 
 const baseURL =
   Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
@@ -166,16 +167,21 @@ const AccountInfo = () => {
             }
           />
 
-          <CustomTextInput
+          {/* <CustomTextInput
             control={control}
             name="location"
             error={errors.location}
             label="location"
+          /> */}
+
+          <GooglePlacesInput
+            control={control}
+            name="location"
+            error={errors.location}
           />
 
           {userData?.type === "company" && (
             <>
-              (
               <CustomPickerField
                 control={control}
                 name="industry_type_id"
@@ -190,7 +196,7 @@ const AccountInfo = () => {
                   />
                 ))}
               </CustomPickerField>
-              ) (
+
               <View>
                 <Text style={styles.text}>Business size?</Text>
                 <Controller
@@ -220,7 +226,6 @@ const AccountInfo = () => {
                   )}
                 />
               </View>
-              )
               <Controller
                 name="min_booking_days"
                 control={control}
@@ -263,6 +268,7 @@ const AccountInfo = () => {
             </>
           )}
         </View>
+
         <CustomButton
           title={isUpdating ? "Submitting..." : "Submit"}
           onPress={handleSubmit(onSubmit)}

@@ -18,6 +18,7 @@ export default Location;
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     flex: 1,
   },

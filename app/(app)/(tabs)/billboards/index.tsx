@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     ...mainstyles.container,
+    paddingBottom: 0,
   },
   rowView: {
     flexDirection: "row",

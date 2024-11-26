@@ -61,6 +61,14 @@ export default function AppLayout() {
         }}
       />
       <Stack.Screen
+        name="(booking)/filtered-billboards"
+        options={{
+          headerTitle: "Filtered Billboards",
+          headerShadowVisible: false,
+          headerTitleAlign: "center",
+        }}
+      />
+      <Stack.Screen
         name="(profile)/favorites"
         options={{
           headerTitle: "Favorites",

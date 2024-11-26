@@ -24,14 +24,7 @@ const _layout = () => {
         name="forgotPassword"
         options={{
           headerTitle: "",
-          headerLeft: () => (
-            <Feather
-              name="chevron-left"
-              size={32}
-              color={Colors.light.primary}
-              onPress={() => router.back()}
-            />
-          ),
+          headerShadowVisible: false,
         }}
       />
       <Stack.Screen
@@ -56,14 +49,7 @@ const _layout = () => {
         name="resetPassword"
         options={{
           headerTitle: "",
-          headerLeft: () => (
-            <Feather
-              name="chevron-left"
-              size={32}
-              color={Colors.light.primary}
-              onPress={() => router.back()}
-            />
-          ),
+          headerShadowVisible: false,
         }}
       />
     </Stack>

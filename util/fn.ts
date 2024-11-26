@@ -1,11 +1,14 @@
+import { Colors } from "@/constants/Colors";
+import Toast from "react-native-root-toast";
+import Geocoder from "react-native-geocoding";
+
+Geocoder.init("AIzaSyALBvB0SHMQXa0IGf_sI-2ewEzPlhwg2xk");
+
 export async function uriToBlob(uri: string): Promise<Blob> {
   const response = await fetch(uri);
   const blob = await response.blob();
   return blob;
 }
-
-import { Colors } from "@/constants/Colors";
-import Toast from "react-native-root-toast";
 
 export const showToast = (message: string, type: "success" | "danger") => {
   Toast.show(message, {
@@ -42,5 +45,19 @@ export const formatNumber = (num: number): string => {
     return (num / 1000).toString() + "K";
   } else {
     return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  }
+};
+
+export const getAddressFromCoords = async (
+  latitude: number,
+  longitude: number
+) => {
+  try {
+    const response = await Geocoder.from(latitude, longitude);
+    const address = response.results[0].formatted_address;
+    console.log("Address:", address);
+    return address;
+  } catch (error) {
+    console.error("Error getting address:", error);
   }
 };

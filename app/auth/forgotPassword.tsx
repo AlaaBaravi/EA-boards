@@ -43,17 +43,17 @@ const forgotPassword = () => {
   };
 
   return (
-    <LinearBackground>
-      <Logo />
-      <View>
-        <WelcomeText text="Forget Password" />
-        <Text style={styles.text}>Please enter your email.</Text>
-      </View>
-      <View style={styles.container}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
-        >
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <LinearBackground>
+        <Logo />
+        <View>
+          <WelcomeText text="Forget Password" />
+          <Text style={styles.text}>Please enter your email.</Text>
+        </View>
+        <View style={styles.container}>
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -66,10 +66,10 @@ const forgotPassword = () => {
             onPress={handleForgotPassword}
             disabled={isSending}
           />
-        </KeyboardAvoidingView>
-      </View>
-      <RegisterLink />
-    </LinearBackground>
+        </View>
+        <RegisterLink />
+      </LinearBackground>
+    </KeyboardAvoidingView>
   );
 };
 

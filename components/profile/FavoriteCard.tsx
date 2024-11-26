@@ -1,18 +1,18 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
+import { router } from "expo-router";
 import Constants from "expo-constants";
 
 import { Billboard } from "@/constants/Types";
-import Favorite from "../billboards/billboard-details/Favorite";
-import Location from "../billboards/billboard-details/Location";
 import { Colors } from "@/constants/Colors";
-import { router } from "expo-router";
+
+import Favorite from "@/components/billboards/billboard-details/Favorite";
+import Location from "@/components/billboards/billboard-details/Location";
 
 const baseURL =
   Constants.expoConfig?.extra?.apiBaseUrl || "https://new.aeboards.net";
 
 const FavoriteCard = ({ billboard }: { billboard: Billboard }) => {
   const imageUri = `${baseURL}${billboard?.files[0]?.path}`;
-  console.log(imageUri);
 
   return (
     <View style={styles.container}>
