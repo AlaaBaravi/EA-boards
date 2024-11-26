@@ -12,8 +12,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 
 import { Colors } from "@/constants/Colors";
 
-import { GOOGLE_MAPS_API_KEY } from "@env";
-
 interface GooglePlacesInputProps<T extends FieldValues> {
   name: Path<T>;
   control: Control<T>;
@@ -31,8 +29,6 @@ const GooglePlacesInput = <T extends FieldValues>({
   placeholder = "Enter location",
   icon = "location-outline",
 }: GooglePlacesInputProps<T>) => {
-  console.log(GOOGLE_MAPS_API_KEY);
-
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}

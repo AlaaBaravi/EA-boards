@@ -55,6 +55,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
+    let isMounted = true; // Track if the component is mounted
+
     const checkToken = async () => {
       setIsLoading(true);
       try {
@@ -62,26 +64,32 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (token) {
           const user = await getProfile(token);
-          if (user) {
+          if (user && isMounted) {
+            // Ensure the component is still mounted
             dispatch({
               type: "LOGIN",
               payload: { token, user },
             });
-          } else {
+          } else if (!user) {
             console.error("Failed to fetch user data.");
           }
         } else {
-          // No token found, user is not logged in
           console.log("No token found, user is not logged in.");
         }
       } catch (error) {
         console.error("Error retrieving token from AsyncStorage:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false); // Avoid updating state if unmounted
+        }
       }
     };
 
     checkToken();
+
+    return () => {
+      isMounted = false; // Cleanup on unmount
+    };
   }, []);
 
   return (
